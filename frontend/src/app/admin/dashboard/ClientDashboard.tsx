@@ -57,28 +57,28 @@ export default function ClientDashboard({ initialWorks }: { initialWorks: Work[]
     return result;
   }, [initialWorks, searchQuery, filterType, sortOrder]);
 
-const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-  setIsSubmitting(true);
-  const formData = new FormData(e.currentTarget);
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    const formData = new FormData(e.currentTarget);
 
-  try {
-    if (editingWork) {
-      formData.append("id", editingWork.id.toString());
-      await updateWork(formData);
-    } else {
-      await addWork(formData);
+    try {
+      if (editingWork) {
+        formData.append("id", editingWork.id.toString());
+        await updateWork(formData);
+      } else {
+        await addWork(formData);
+      }
+
+      setActiveTab("manage");
+      setEditingWork(null);
+      formRef.current?.reset();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Failed to process work");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setActiveTab("manage");
-    setEditingWork(null);
-    formRef.current?.reset();
-  } catch (error) {
-    alert(error instanceof Error ? error.message : "Failed to process work");
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
 
   const handleEdit = (work: Work) => {
     setEditingWork(work);
@@ -311,17 +311,17 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8 pt-8 border-t border-white/10">
                 <div className="ci-group mb-0">
                   <label className="ci-label">Thumbnail Image</label>
-                  <input name="thumbnailFile" type="file" accept="image/*" style={{ fontFamily: "var(--ff-body)" }} className="w-full py-3 bg-transparent text-white file:mr-4 file:py-2 file:px-4 file:rounded-none file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-widest file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 transition-colors cursor-pointer" />
+                  <input name="thumbnailFile" type="file" accept="image/*" required={!editingWork} style={{ fontFamily: "var(--ff-body)" }} className="w-full py-3 bg-transparent text-white file:mr-4 file:py-2 file:px-4 file:rounded-none file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-widest file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 transition-colors cursor-pointer" />
                   {editingWork?.thumbnailUrl && <p className="text-[10px] uppercase tracking-widest text-white/50 mt-2">Active thumbnail present</p>}
                 </div>
                 <div className="ci-group mb-0">
                   <label className="ci-label">Banner Image</label>
-                  <input name="bannerFile" type="file" accept="image/*" style={{ fontFamily: "var(--ff-body)" }} className="w-full py-3 bg-transparent text-white file:mr-4 file:py-2 file:px-4 file:rounded-none file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-widest file:bg-white file:text-black hover:file:bg-zinc-200 transition-colors cursor-pointer" />
+                  <input name="bannerFile" type="file" accept="image/*" required={!editingWork} style={{ fontFamily: "var(--ff-body)" }} className="w-full py-3 bg-transparent text-white file:mr-4 file:py-2 file:px-4 file:rounded-none file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-widest file:bg-white file:text-black hover:file:bg-zinc-200 transition-colors cursor-pointer" />
                   {editingWork?.bannerUrl && <p className="text-[10px] uppercase tracking-widest text-white/50 mt-2">Active banner present</p>}
                 </div>
                 <div className="ci-group mb-0 md:col-span-2">
                   <label className="ci-label">Gallery Images</label>
-                  <input name="galleryFiles" type="file" accept="image/*" multiple style={{ fontFamily: "var(--ff-body)" }} className="w-full py-3 bg-transparent text-white file:mr-4 file:py-2 file:px-4 file:rounded-none file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-widest file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 transition-colors cursor-pointer" />
+                  <input name="galleryFiles" type="file" accept="image/*" multiple required={!editingWork} style={{ fontFamily: "var(--ff-body)" }} className="w-full py-3 bg-transparent text-white file:mr-4 file:py-2 file:px-4 file:rounded-none file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-widest file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 transition-colors cursor-pointer" />
                 </div>
               </div>
 
