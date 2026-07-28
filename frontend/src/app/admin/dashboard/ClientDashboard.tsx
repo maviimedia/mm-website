@@ -63,11 +63,16 @@ export default function ClientDashboard({ initialWorks }: { initialWorks: Work[]
     const formData = new FormData(e.currentTarget);
 
     try {
+      let result;
       if (editingWork) {
         formData.append("id", editingWork.id.toString());
-        await updateWork(formData);
+        result = await updateWork(formData);
       } else {
-        await addWork(formData);
+        result = await addWork(formData);
+      }
+
+      if (result?.error) {
+        throw new Error(result.error);
       }
 
       setActiveTab("manage");
@@ -87,7 +92,14 @@ export default function ClientDashboard({ initialWorks }: { initialWorks: Work[]
 
   const handleDelete = async (id: number) => {
     if (window.confirm("Are you sure you want to permanently delete this work?")) {
-      await deleteWork(id);
+      try {
+        const result = await deleteWork(id);
+        if (result?.error) {
+          alert(result.error);
+        }
+      } catch (error) {
+        alert(error instanceof Error ? error.message : "Failed to delete work");
+      }
     }
   };
 
