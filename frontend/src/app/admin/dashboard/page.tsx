@@ -2,7 +2,11 @@ import { supabase } from "../../../lib/supabase";
 import ClientDashboard from "./ClientDashboard";
 
 export default async function DashboardPage() {
-  const { data: allWorks } = await supabase.from("works").select("*");
+  const { data: allWorks, error: fetchError } = await supabase.from("works").select("*");
+  
+  if (fetchError) {
+    console.error(fetchError);
+  }
   
   const formattedWorks = (allWorks || []).map((work: any) => ({
     id: work.id,
@@ -19,5 +23,5 @@ export default async function DashboardPage() {
     pill: work.pill || "Case Study"
   }));
   
-  return <ClientDashboard initialWorks={formattedWorks} />;
+  return <ClientDashboard initialWorks={formattedWorks} fetchError={fetchError?.message || null} />;
 }

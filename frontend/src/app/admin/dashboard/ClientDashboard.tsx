@@ -18,11 +18,12 @@ interface Work {
   pill: string;
 }
 
-export default function ClientDashboard({ initialWorks }: { initialWorks: Work[] }) {
+export default function ClientDashboard({ initialWorks, fetchError }: { initialWorks: Work[], fetchError?: string | null }) {
   const [activeTab, setActiveTab] = useState<"manage" | "form">("manage");
   const [editingWork, setEditingWork] = useState<Work | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+  const [errorMsg, setErrorMsg] = useState<string | null>(fetchError || null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState<"newest" | "title-asc" | "title-desc">("newest");
   const [filterType, setFilterType] = useState("All");
@@ -57,9 +58,15 @@ export default function ClientDashboard({ initialWorks }: { initialWorks: Work[]
     return result;
   }, [initialWorks, searchQuery, filterType, sortOrder]);
 
+  const clearMessages = () => {
+    setErrorMsg(null);
+    setSuccessMsg(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
+    clearMessages();
     const formData = new FormData(e.currentTarget);
 
     try {
@@ -75,11 +82,12 @@ export default function ClientDashboard({ initialWorks }: { initialWorks: Work[]
         throw new Error(result.error);
       }
 
+      setSuccessMsg(editingWork ? "Project successfully updated!" : "Project successfully published!");
       setActiveTab("manage");
       setEditingWork(null);
       formRef.current?.reset();
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to process work");
+      setErrorMsg(error instanceof Error ? error.message : "Failed to process work");
     } finally {
       setIsSubmitting(false);
     }
@@ -92,18 +100,22 @@ export default function ClientDashboard({ initialWorks }: { initialWorks: Work[]
 
   const handleDelete = async (id: number) => {
     if (window.confirm("Are you sure you want to permanently delete this work?")) {
+      clearMessages();
       try {
         const result = await deleteWork(id);
         if (result?.error) {
-          alert(result.error);
+          setErrorMsg(result.error);
+        } else {
+          setSuccessMsg("Work successfully deleted!");
         }
       } catch (error) {
-        alert(error instanceof Error ? error.message : "Failed to delete work");
+        setErrorMsg(error instanceof Error ? error.message : "Failed to delete work");
       }
     }
   };
 
   const resetForm = () => {
+    clearMessages();
     setEditingWork(null);
     setActiveTab("form");
     formRef.current?.reset();
@@ -157,7 +169,25 @@ export default function ClientDashboard({ initialWorks }: { initialWorks: Work[]
         </div>
       </aside>
 
-      <main className="flex-1 p-6 md:p-10 lg:p-16 overflow-y-auto">
+      <main className="flex-1 p-6 md:p-10 lg:p-16 overflow-y-auto relative">
+        
+        {(errorMsg || successMsg) && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-2xl">
+            {errorMsg && (
+              <div className="bg-red-900/90 border border-red-500 text-white px-6 py-4 rounded shadow-lg flex justify-between items-center mb-2">
+                <p style={{ fontFamily: "var(--ff-body)" }} className="text-sm">{errorMsg}</p>
+                <button onClick={() => setErrorMsg(null)} className="text-white/70 hover:text-white">&times;</button>
+              </div>
+            )}
+            {successMsg && (
+              <div className="bg-emerald-900/90 border border-emerald-500 text-white px-6 py-4 rounded shadow-lg flex justify-between items-center mb-2">
+                <p style={{ fontFamily: "var(--ff-body)" }} className="text-sm">{successMsg}</p>
+                <button onClick={() => setSuccessMsg(null)} className="text-white/70 hover:text-white">&times;</button>
+              </div>
+            )}
+          </div>
+        )}
+
         {activeTab === "manage" && (
           <div className="max-w-[1440px] mx-auto">
             
