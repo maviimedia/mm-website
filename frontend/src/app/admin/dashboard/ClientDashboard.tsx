@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useCallback } from "react";
 import { addWork, updateWork, deleteWork } from "./actions";
+import { supabase } from "../../../lib/supabase";
 
 interface Work {
   id: number;
@@ -18,15 +19,37 @@ interface Work {
   pill: string;
 }
 
+async function uploadFileClientSide(file: File) {
+  if (!file || file.size === 0) return null;
+  
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+  
+  const { error } = await supabase.storage.from('portfolio-media').upload(fileName, file);
+  
+  if (error) {
+    throw new Error(error.message);
+  }
+  
+  const { data } = supabase.storage.from('portfolio-media').getPublicUrl(fileName);
+  return data.publicUrl;
+}
+
 export default function ClientDashboard({ initialWorks, fetchError }: { initialWorks: Work[], fetchError?: string | null }) {
   const [activeTab, setActiveTab] = useState<"manage" | "form">("manage");
   const [editingWork, setEditingWork] = useState<Work | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadingState, setLoadingState] = useState<string>("");
   const [errorMsg, setErrorMsg] = useState<string | null>(fetchError || null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState<"newest" | "title-asc" | "title-desc">("newest");
   const [filterType, setFilterType] = useState("All");
+
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
 
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -63,19 +86,99 @@ export default function ClientDashboard({ initialWorks, fetchError }: { initialW
     setSuccessMsg(null);
   };
 
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+    if (files.length > 0) {
+      setGalleryFiles(prev => [...prev, ...files]);
+    }
+  }, []);
+
+  const handleGallerySelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      setGalleryFiles(prev => [...prev, ...files]);
+    }
+  };
+
+  const removeGalleryFile = (indexToRemove: number) => {
+    setGalleryFiles(prev => prev.filter((_, index) => index !== indexToRemove));
+  };
+
+  const resetFormFiles = () => {
+    setThumbnailFile(null);
+    setBannerFile(null);
+    setGalleryFiles([]);
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    
     setIsSubmitting(true);
+    setLoadingState("Initializing...");
     clearMessages();
-    const formData = new FormData(e.currentTarget);
+    const rawFormData = new FormData(e.currentTarget);
 
     try {
+      const processedData = new FormData();
+      const textFields = ["title", "slug", "pill", "clientName", "clientType", "services", "brief", "bigIdea", "result"];
+      
+      textFields.forEach(field => {
+        const val = rawFormData.get(field);
+        if (val) processedData.append(field, val as string);
+      });
+
+      if (editingWork) {
+        processedData.append("id", editingWork.id.toString());
+      }
+
+      if (thumbnailFile) {
+        setLoadingState("Uploading thumbnail...");
+        const url = await uploadFileClientSide(thumbnailFile);
+        if (url) processedData.append("thumbnailUrl", url);
+      } else if (!editingWork) {
+        throw new Error("Thumbnail image is required");
+      }
+
+      if (bannerFile) {
+        setLoadingState("Uploading banner...");
+        const url = await uploadFileClientSide(bannerFile);
+        if (url) processedData.append("bannerUrl", url);
+      } else if (!editingWork) {
+        throw new Error("Banner image is required");
+      }
+
+      if (galleryFiles.length > 0) {
+        setLoadingState(`Uploading ${galleryFiles.length} gallery items...`);
+        const uploadedGallery = await Promise.all(
+          galleryFiles.map(async (file) => {
+            const url = await uploadFileClientSide(file);
+            return { url, name: file.name };
+          })
+        );
+        processedData.append("galleryData", JSON.stringify(uploadedGallery));
+      }
+
+      setLoadingState("Publishing...");
+      
       let result;
       if (editingWork) {
-        formData.append("id", editingWork.id.toString());
-        result = await updateWork(formData);
+        result = await updateWork(processedData);
       } else {
-        result = await addWork(formData);
+        result = await addWork(processedData);
       }
 
       if (result?.error) {
@@ -85,16 +188,19 @@ export default function ClientDashboard({ initialWorks, fetchError }: { initialW
       setSuccessMsg(editingWork ? "Project successfully updated!" : "Project successfully published!");
       setActiveTab("manage");
       setEditingWork(null);
+      resetFormFiles();
       formRef.current?.reset();
     } catch (error) {
       setErrorMsg(error instanceof Error ? error.message : "Failed to process work");
     } finally {
       setIsSubmitting(false);
+      setLoadingState("");
     }
   };
 
   const handleEdit = (work: Work) => {
     setEditingWork(work);
+    resetFormFiles();
     setActiveTab("form");
   };
 
@@ -104,10 +210,9 @@ export default function ClientDashboard({ initialWorks, fetchError }: { initialW
       try {
         const result = await deleteWork(id);
         if (result?.error) {
-          setErrorMsg(result.error);
-        } else {
-          setSuccessMsg("Work successfully deleted!");
+          throw new Error(result.error);
         }
+        setSuccessMsg("Work successfully deleted!");
       } catch (error) {
         setErrorMsg(error instanceof Error ? error.message : "Failed to delete work");
       }
@@ -117,6 +222,7 @@ export default function ClientDashboard({ initialWorks, fetchError }: { initialW
   const resetForm = () => {
     clearMessages();
     setEditingWork(null);
+    resetFormFiles();
     setActiveTab("form");
     formRef.current?.reset();
   };
@@ -353,21 +459,53 @@ export default function ClientDashboard({ initialWorks, fetchError }: { initialW
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8 pt-8 border-t border-white/10">
                 <div className="ci-group mb-0">
                   <label className="ci-label">Thumbnail Image</label>
-                  <input name="thumbnailFile" type="file" accept="image/*" required={!editingWork} style={{ fontFamily: "var(--ff-body)" }} className="w-full py-3 bg-transparent text-white file:mr-4 file:py-2 file:px-4 file:rounded-none file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-widest file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 transition-colors cursor-pointer" />
-                  {editingWork?.thumbnailUrl && <p className="text-[10px] uppercase tracking-widest text-white/50 mt-2">Active thumbnail present</p>}
+                  <input type="file" accept="image/*" onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)} style={{ fontFamily: "var(--ff-body)" }} className="w-full py-3 bg-transparent text-white file:mr-4 file:py-2 file:px-4 file:rounded-none file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-widest file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 transition-colors cursor-pointer" />
+                  {thumbnailFile ? (
+                    <p className="text-[10px] uppercase tracking-widest text-green-400 mt-2">New file: {thumbnailFile.name}</p>
+                  ) : editingWork?.thumbnailUrl ? (
+                    <p className="text-[10px] uppercase tracking-widest text-white/50 mt-2">Active thumbnail present</p>
+                  ) : null}
                 </div>
                 <div className="ci-group mb-0">
                   <label className="ci-label">Banner Image</label>
-                  <input name="bannerFile" type="file" accept="image/*" required={!editingWork} style={{ fontFamily: "var(--ff-body)" }} className="w-full py-3 bg-transparent text-white file:mr-4 file:py-2 file:px-4 file:rounded-none file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-widest file:bg-white file:text-black hover:file:bg-zinc-200 transition-colors cursor-pointer" />
-                  {editingWork?.bannerUrl && <p className="text-[10px] uppercase tracking-widest text-white/50 mt-2">Active banner present</p>}
+                  <input type="file" accept="image/*" onChange={(e) => setBannerFile(e.target.files?.[0] || null)} style={{ fontFamily: "var(--ff-body)" }} className="w-full py-3 bg-transparent text-white file:mr-4 file:py-2 file:px-4 file:rounded-none file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-widest file:bg-white file:text-black hover:file:bg-zinc-200 transition-colors cursor-pointer" />
+                  {bannerFile ? (
+                    <p className="text-[10px] uppercase tracking-widest text-green-400 mt-2">New file: {bannerFile.name}</p>
+                  ) : editingWork?.bannerUrl ? (
+                    <p className="text-[10px] uppercase tracking-widest text-white/50 mt-2">Active banner present</p>
+                  ) : null}
                 </div>
                 <div className="ci-group mb-0 md:col-span-2">
-                  <label className="ci-label">Gallery Images</label>
-                  <input name="galleryFiles" type="file" accept="image/*" multiple required={!editingWork} style={{ fontFamily: "var(--ff-body)" }} className="w-full py-3 bg-transparent text-white file:mr-4 file:py-2 file:px-4 file:rounded-none file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-widest file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 transition-colors cursor-pointer" />
+                  <label className="ci-label flex justify-between">
+                    <span>Gallery Images</span>
+                    <span style={{ textTransform: "lowercase", letterSpacing: "normal" }} className="text-white/40">{galleryFiles.length} selected</span>
+                  </label>
+                  <div 
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    className={`relative w-full py-10 mt-2 border-2 border-dashed ${isDragging ? "border-white bg-white/5" : "border-white/20 bg-transparent"} transition-colors flex flex-col items-center justify-center text-center`}
+                  >
+                    <input type="file" accept="image/*" multiple onChange={handleGallerySelect} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                    <span style={{ fontFamily: "var(--ff-body)" }} className="text-sm text-white/40">Drag & drop gallery files here or click to browse</span>
+                  </div>
+
+                  {galleryFiles.length > 0 && (
+                    <div className="mt-4 flex flex-col gap-2">
+                      {galleryFiles.map((file, idx) => (
+                        <div key={`${file.name}-${idx}`} className="flex items-center justify-between py-2 border-b border-white/10">
+                          <span style={{ fontFamily: "var(--ff-body)" }} className="text-xs text-white/70 truncate">{file.name}</span>
+                          <button type="button" onClick={() => removeGalleryFile(idx)} className="text-white/40 hover:text-red-500 transition-colors">
+                            &times;
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
-              <div className="pt-8 flex gap-6">
+              <div className="pt-8 flex items-center gap-6">
                 <button 
                   type="submit" 
                   disabled={isSubmitting}
@@ -380,11 +518,15 @@ export default function ClientDashboard({ initialWorks, fetchError }: { initialW
                   <button 
                     type="button" 
                     onClick={resetForm}
+                    disabled={isSubmitting}
                     style={{ fontFamily: "var(--ff-label)" }}
-                    className="px-10 py-4 text-xs font-bold tracking-[0.15em] uppercase text-white bg-transparent border border-white/20 hover:border-white transition-colors"
+                    className="px-10 py-4 text-xs font-bold tracking-[0.15em] uppercase text-white bg-transparent border border-white/20 hover:border-white transition-colors disabled:opacity-50"
                   >
                     Cancel
                   </button>
+                )}
+                {isSubmitting && loadingState && (
+                  <span style={{ fontFamily: "var(--ff-body)" }} className="text-xs text-white/50 animate-pulse ml-2">{loadingState}</span>
                 )}
               </div>
             </form>

@@ -3,25 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { supabase } from "../../../lib/supabase";
 
-async function uploadFileToSupabase(file: File | null) {
-  if (!file || file.size === 0) {
-    return null;
-  }
-  
-  const fileExt = file.name.split('.').pop();
-  const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
-  
-  const { error } = await supabase.storage.from('portfolio-media').upload(fileName, file);
-    
-  if (error) {
-    throw new Error(error.message);
-  }
-  
-  const { data } = supabase.storage.from('portfolio-media').getPublicUrl(fileName);
-    
-  return data.publicUrl;
-}
-
 export async function addWork(formData: FormData) {
   try {
     const slug = formData.get("slug") as string;
@@ -33,16 +14,13 @@ export async function addWork(formData: FormData) {
     const bigIdea = formData.get("bigIdea") as string;
     const result = formData.get("result") as string;
     const pill = formData.get("pill") as string;
+    
+    const bannerUrl = formData.get("bannerUrl") as string;
+    const thumbnailUrl = formData.get("thumbnailUrl") as string;
+    const galleryDataStr = formData.get("galleryData") as string;
 
-    const bannerFile = formData.get("bannerFile") as File | null;
-    const thumbnailFile = formData.get("thumbnailFile") as File | null;
-    const galleryFiles = formData.getAll("galleryFiles") as File[];
-
-    const bannerUrl = await uploadFileToSupabase(bannerFile);
-    const thumbnailUrl = await uploadFileToSupabase(thumbnailFile);
-
-    if (!bannerUrl) {
-      return { error: "Banner image is required" };
+    if (!bannerUrl || !thumbnailUrl) {
+      throw new Error("Missing required media URLs from payload");
     }
 
     const { data: workData, error: workError } = await supabase.from("works").insert([{
@@ -60,41 +38,43 @@ export async function addWork(formData: FormData) {
     }]).select("id").single();
 
     if (workError) {
-      return { error: workError.message };
+      throw new Error(workError.message);
     }
 
-    const workId = workData.id;
+    if (galleryDataStr) {
+      const galleryItems = JSON.parse(galleryDataStr);
+      if (galleryItems.length > 0) {
+        const mediaInserts = galleryItems.map((item: any, index: number) => ({
+          work_id: workData.id,
+          image_url: item.url,
+          title: item.name,
+          display_order: index + 1
+        }));
 
-    let displayOrder = 1;
-    for (const file of galleryFiles) {
-      if (file.size > 0) {
-        const fileUrl = await uploadFileToSupabase(file);
-        if (fileUrl) {
-          const { error: mediaError } = await supabase.from("work_media").insert([{
-            work_id: workId,
-            image_url: fileUrl,
-            title: file.name,
-            display_order: displayOrder
-          }]);
-          
-          if (mediaError) {
-            return { error: mediaError.message };
-          }
-          displayOrder++;
+        const { error: mediaError } = await supabase.from("work_media").insert(mediaInserts);
+        
+        if (mediaError) {
+          throw new Error(mediaError.message);
         }
       }
     }
 
     revalidatePath("/admin/dashboard");
     revalidatePath("/works");
+    return { success: true };
   } catch (error: any) {
-    return { error: error.message || "Failed to add work" };
+    return { error: error.message || "Failed to process work addition" };
   }
 }
 
 export async function updateWork(formData: FormData) {
   try {
     const id = Number(formData.get("id"));
+    
+    if (!id) {
+      throw new Error("Invalid project ID provided");
+    }
+
     const slug = formData.get("slug") as string;
     const title = formData.get("title") as string;
     const clientName = formData.get("clientName") as string;
@@ -105,9 +85,9 @@ export async function updateWork(formData: FormData) {
     const result = formData.get("result") as string;
     const pill = formData.get("pill") as string;
     
-    const bannerFile = formData.get("bannerFile") as File | null;
-    const thumbnailFile = formData.get("thumbnailFile") as File | null;
-    const galleryFiles = formData.getAll("galleryFiles") as File[];
+    const bannerUrl = formData.get("bannerUrl") as string | null;
+    const thumbnailUrl = formData.get("thumbnailUrl") as string | null;
+    const galleryDataStr = formData.get("galleryData") as string | null;
     
     const updateData: Record<string, any> = {
       slug,
@@ -121,70 +101,61 @@ export async function updateWork(formData: FormData) {
       pill
     };
 
-    if (bannerFile && bannerFile.size > 0) {
-      const bannerUrl = await uploadFileToSupabase(bannerFile);
-      if (bannerUrl) {
-        updateData.banner_url = bannerUrl;
-      }
-    }
-
-    if (thumbnailFile && thumbnailFile.size > 0) {
-      const thumbnailUrl = await uploadFileToSupabase(thumbnailFile);
-      if (thumbnailUrl) {
-        updateData.thumbnail_url = thumbnailUrl;
-      }
-    }
+    if (bannerUrl) updateData.banner_url = bannerUrl;
+    if (thumbnailUrl) updateData.thumbnail_url = thumbnailUrl;
 
     const { error: updateError } = await supabase.from("works").update(updateData).eq("id", id);
 
     if (updateError) {
-      return { error: updateError.message };
+      throw new Error(updateError.message);
     }
 
-    if (galleryFiles.length > 0 && galleryFiles[0].size > 0) {
-      let displayOrder = 1;
-      for (const file of galleryFiles) {
-        if (file.size > 0) {
-          const fileUrl = await uploadFileToSupabase(file);
-          if (fileUrl) {
-            const { error: mediaError } = await supabase.from("work_media").insert([{
-              work_id: id,
-              image_url: fileUrl,
-              title: file.name,
-              display_order: displayOrder
-            }]);
-            
-            if (mediaError) {
-              return { error: mediaError.message };
-            }
-            displayOrder++;
-          }
+    if (galleryDataStr) {
+      const galleryItems = JSON.parse(galleryDataStr);
+      if (galleryItems.length > 0) {
+        const mediaInserts = galleryItems.map((item: any, index: number) => ({
+          work_id: id,
+          image_url: item.url,
+          title: item.name,
+          display_order: index + 1
+        }));
+
+        const { error: mediaError } = await supabase.from("work_media").insert(mediaInserts);
+        
+        if (mediaError) {
+          throw new Error(mediaError.message);
         }
       }
     }
 
     revalidatePath("/admin/dashboard");
     revalidatePath("/works");
+    return { success: true };
   } catch (error: any) {
-    return { error: error.message || "Failed to update work" };
+    return { error: error.message || "Failed to process work update" };
   }
 }
 
 export async function deleteWork(id: number) {
   try {
+    if (!id) {
+      throw new Error("Invalid project ID provided for deletion");
+    }
+
     const { error: mediaError } = await supabase.from("work_media").delete().eq("work_id", id);
     if (mediaError) {
-      return { error: mediaError.message };
+      throw new Error(mediaError.message);
     }
 
     const { error: workError } = await supabase.from("works").delete().eq("id", id);
     if (workError) {
-      return { error: workError.message };
+      throw new Error(workError.message);
     }
 
     revalidatePath("/admin/dashboard");
     revalidatePath("/works");
+    return { success: true };
   } catch (error: any) {
-    return { error: error.message || "Failed to delete work" };
+    return { error: error.message || "Failed to process work deletion" };
   }
 }
