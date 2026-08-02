@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { fetchWorksPagination } from "../../lib/workActions";
 import InfiniteWorkList from "../../components/InfiniteWorkList";
 
