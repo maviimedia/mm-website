@@ -128,11 +128,11 @@ export default function ClientDashboard({ initialWorks, fetchError }: { initialW
     if (isSubmitting) return;
     
     setIsSubmitting(true);
-    setLoadingState("Initializing...");
+    setLoadingState("Initializing system...");
     clearMessages();
-    const rawFormData = new FormData(e.currentTarget);
-
+    
     try {
+      const rawFormData = new FormData(e.currentTarget);
       const processedData = new FormData();
       const textFields = ["title", "slug", "pill", "clientName", "clientType", "services", "brief", "bigIdea", "result"];
       
@@ -145,53 +145,78 @@ export default function ClientDashboard({ initialWorks, fetchError }: { initialW
         processedData.append("id", editingWork.id.toString());
       }
 
+      // 1. Upload Thumbnail (Sequential Step 1)
       if (thumbnailFile) {
-        setLoadingState("Uploading thumbnail...");
-        const url = await uploadFileClientSide(thumbnailFile);
-        if (url) processedData.append("thumbnailUrl", url);
+        setLoadingState("Uploading thumbnail asset...");
+        try {
+          const url = await uploadFileClientSide(thumbnailFile);
+          if (url) processedData.append("thumbnailUrl", url);
+        } catch (err: any) {
+          throw new Error(`Thumbnail Upload Failed: ${err.message}`);
+        }
       } else if (!editingWork) {
-        throw new Error("Thumbnail image is required");
+        throw new Error("Validation Error: Thumbnail image is strictly required.");
       }
 
+      // 2. Upload Banner (Sequential Step 2)
       if (bannerFile) {
-        setLoadingState("Uploading banner...");
-        const url = await uploadFileClientSide(bannerFile);
-        if (url) processedData.append("bannerUrl", url);
+        setLoadingState("Uploading hero banner asset...");
+        try {
+          const url = await uploadFileClientSide(bannerFile);
+          if (url) processedData.append("bannerUrl", url);
+        } catch (err: any) {
+          throw new Error(`Banner Upload Failed: ${err.message}`);
+        }
       } else if (!editingWork) {
-        throw new Error("Banner image is required");
+        throw new Error("Validation Error: Banner image is strictly required.");
       }
 
+      // 3. Upload Gallery Files (Sequential Loop, NOT Promise.all)
       if (galleryFiles.length > 0) {
-        setLoadingState(`Uploading ${galleryFiles.length} gallery items...`);
-        const uploadedGallery = await Promise.all(
-          galleryFiles.map(async (file) => {
+        const uploadedGallery = [];
+        for (let i = 0; i < galleryFiles.length; i++) {
+          const file = galleryFiles[i];
+          setLoadingState(`Uploading gallery asset ${i + 1} of ${galleryFiles.length}...`);
+          try {
             const url = await uploadFileClientSide(file);
-            return { url, name: file.name };
-          })
-        );
+            if (url) {
+              uploadedGallery.push({ url, name: file.name });
+            }
+          } catch (err: any) {
+            throw new Error(`Gallery Upload Failed on file "${file.name}": ${err.message}`);
+          }
+        }
         processedData.append("galleryData", JSON.stringify(uploadedGallery));
       }
 
-      setLoadingState("Publishing...");
-      
+      // 4. Server Action Execution
+      setLoadingState("Syncing data with Supabase Database...");
       let result;
-      if (editingWork) {
-        result = await updateWork(processedData);
-      } else {
-        result = await addWork(processedData);
+      try {
+        if (editingWork) {
+          result = await updateWork(processedData);
+        } else {
+          result = await addWork(processedData);
+        }
+      } catch (err: any) {
+        throw new Error(`Database Sync Failed: ${err.message}`);
       }
 
       if (result?.error) {
-        throw new Error(result.error);
+        throw new Error(`Server Rejected Action: ${result.error}`);
       }
 
-      setSuccessMsg(editingWork ? "Project successfully updated!" : "Project successfully published!");
+      // 5. Success Check
+      setSuccessMsg(editingWork ? "Configuration successfully updated." : "New project successfully deployed.");
       setActiveTab("manage");
       setEditingWork(null);
       resetFormFiles();
       formRef.current?.reset();
-    } catch (error) {
-      setErrorMsg(error instanceof Error ? error.message : "Failed to process work");
+
+    } catch (error: any) {
+      // Robust UI Error Catcher
+      console.error("Submission Process Halted:", error);
+      setErrorMsg(error.message || "An unknown critical error occurred during execution.");
     } finally {
       setIsSubmitting(false);
       setLoadingState("");
@@ -205,16 +230,16 @@ export default function ClientDashboard({ initialWorks, fetchError }: { initialW
   };
 
   const handleDelete = async (id: number) => {
-    if (window.confirm("Are you sure you want to permanently delete this work?")) {
+    if (window.confirm("Confirm permanent deletion of this project from the database?")) {
       clearMessages();
       try {
         const result = await deleteWork(id);
         if (result?.error) {
           throw new Error(result.error);
         }
-        setSuccessMsg("Work successfully deleted!");
-      } catch (error) {
-        setErrorMsg(error instanceof Error ? error.message : "Failed to delete work");
+        setSuccessMsg("Project record erased successfully.");
+      } catch (error: any) {
+        setErrorMsg(error.message || "Deletion failed due to a system error.");
       }
     }
   };
@@ -233,31 +258,56 @@ export default function ClientDashboard({ initialWorks, fetchError }: { initialW
 
   return (
     <div style={{ backgroundColor: "var(--page-bg)", color: "var(--page-ink)" }} className="min-h-[100dvh] flex flex-col md:flex-row">
-      <aside className="w-full md:w-64 lg:w-72 border-r border-white/10 p-6 lg:p-10 flex flex-col">
+      
+      {/* Strict UI Error Alert System - Fixed to top right */}
+      {(errorMsg || successMsg) && (
+        <div className="fixed top-6 right-6 z-[9999] w-full max-w-sm flex flex-col gap-3">
+          {errorMsg && (
+            <div className="bg-[#1a0505] border-l-4 border-[#c5151b] text-white p-5 shadow-2xl flex justify-between items-start">
+              <div className="pr-4">
+                <h4 className="text-[#c5151b] font-bold text-[10px] uppercase tracking-widest mb-2">Process Halted</h4>
+                <p style={{ fontFamily: "var(--ff-body)" }} className="text-[13px] leading-relaxed break-words">{errorMsg}</p>
+              </div>
+              <button type="button" onClick={() => setErrorMsg(null)} className="text-white/40 hover:text-white flex-shrink-0 text-lg leading-none">&times;</button>
+            </div>
+          )}
+          {successMsg && (
+            <div className="bg-[#051a0a] border-l-4 border-green-500 text-white p-5 shadow-2xl flex justify-between items-start">
+              <div className="pr-4">
+                <h4 className="text-green-500 font-bold text-[10px] uppercase tracking-widest mb-2">Process Complete</h4>
+                <p style={{ fontFamily: "var(--ff-body)" }} className="text-[13px] leading-relaxed break-words">{successMsg}</p>
+              </div>
+              <button type="button" onClick={() => setSuccessMsg(null)} className="text-white/40 hover:text-white flex-shrink-0 text-lg leading-none">&times;</button>
+            </div>
+          )}
+        </div>
+      )}
+
+      <aside className="w-full md:w-[280px] shrink-0 border-r border-white/10 p-8 flex flex-col bg-black">
         <div className="mb-16">
-          <img src="/assets/Logo-ICON.svg" alt="Maviimedia Logo" className="w-10 mb-6" />
-          <p style={{ fontFamily: "var(--ff-body)", color: "var(--pp-muted)" }} className="text-[10px] font-bold uppercase tracking-[0.2em] mb-3">
-            Studio Panel
+          <img src="/assets/Logo-ICON.svg" alt="Maviimedia" className="w-12 mb-8" />
+          <p style={{ fontFamily: "var(--ff-body)", color: "var(--pp-muted)" }} className="text-[10px] font-bold uppercase tracking-[0.2em] mb-2">
+            Studio Command
           </p>
-          <p style={{ fontFamily: "var(--ff-body)", color: "var(--pp-muted)" }} className="text-xs opacity-80">
-            Centralized command center for managing digital assets, client works, and studio publications.
+          <p style={{ fontFamily: "var(--ff-body)", color: "var(--pp-muted)" }} className="text-xs opacity-70 leading-relaxed">
+            Centralized management system for digital assets and publications.
           </p>
         </div>
         
-        <nav className="flex flex-col gap-4 flex-1">
+        <nav className="flex flex-col gap-2 flex-1">
           <button 
             onClick={() => setActiveTab("manage")}
             style={{ fontFamily: "var(--ff-label)" }}
-            className={`text-left text-xs uppercase tracking-widest py-2 transition-colors ${activeTab === "manage" ? "text-white" : "text-white/40 hover:text-white/80"}`}
+            className={`text-left text-[11px] uppercase tracking-widest py-3 px-4 transition-colors ${activeTab === "manage" ? "bg-white text-black" : "text-white/50 hover:text-white"}`}
           >
             Manage Works
           </button>
           <button 
             onClick={resetForm}
             style={{ fontFamily: "var(--ff-label)" }}
-            className={`text-left text-xs uppercase tracking-widest py-2 transition-colors ${activeTab === "form" ? "text-white" : "text-white/40 hover:text-white/80"}`}
+            className={`text-left text-[11px] uppercase tracking-widest py-3 px-4 transition-colors ${activeTab === "form" ? "bg-white text-black" : "text-white/50 hover:text-white"}`}
           >
-            Add New Work
+            Deploy New Work
           </button>
         </nav>
 
@@ -265,274 +315,257 @@ export default function ClientDashboard({ initialWorks, fetchError }: { initialW
           <button 
             onClick={handleLogout}
             style={{ fontFamily: "var(--ff-label)" }}
-            className="text-left text-xs uppercase tracking-widest py-2 text-white/40 hover:text-[#c5151b] transition-colors w-full flex items-center gap-2"
+            className="text-left text-[11px] uppercase tracking-widest py-2 px-4 text-white/40 hover:text-[#c5151b] transition-colors w-full flex items-center gap-3"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
-            Secure Logout
+            System Logout
           </button>
         </div>
       </aside>
 
-      <main className="flex-1 p-6 md:p-10 lg:p-16 overflow-y-auto relative">
-        
-        {(errorMsg || successMsg) && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-2xl">
-            {errorMsg && (
-              <div className="bg-red-900/90 border border-red-500 text-white px-6 py-4 rounded shadow-lg flex justify-between items-center mb-2">
-                <p style={{ fontFamily: "var(--ff-body)" }} className="text-sm">{errorMsg}</p>
-                <button onClick={() => setErrorMsg(null)} className="text-white/70 hover:text-white">&times;</button>
-              </div>
-            )}
-            {successMsg && (
-              <div className="bg-emerald-900/90 border border-emerald-500 text-white px-6 py-4 rounded shadow-lg flex justify-between items-center mb-2">
-                <p style={{ fontFamily: "var(--ff-body)" }} className="text-sm">{successMsg}</p>
-                <button onClick={() => setSuccessMsg(null)} className="text-white/70 hover:text-white">&times;</button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === "manage" && (
-          <div className="max-w-[1440px] mx-auto">
-            
-            <div className="wrk-header flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-12">
-              <div>
-                <h1 style={{ fontFamily: "var(--ff-head)" }} className="text-4xl lg:text-5xl mb-8">Studio Overview</h1>
-                <div className="flex flex-wrap gap-12">
-                  <div>
-                    <p className="ci-label">Total Works</p>
-                    <p style={{ fontFamily: "var(--ff-head)" }} className="text-4xl mt-1">{initialWorks.length}</p>
-                  </div>
-                  <div>
-                    <p className="ci-label">Total Clients</p>
-                    <p style={{ fontFamily: "var(--ff-head)" }} className="text-4xl mt-1">{clientTypes.length - 1}</p>
-                  </div>
-                  <div>
-                    <p className="ci-label">System Status</p>
-                    <p style={{ fontFamily: "var(--ff-head)" }} className="text-3xl mt-1 flex items-center gap-3">
-                      <span className="flex h-2 w-2 relative mb-1">
-                        <span className="animate-ping absolute inline-flex h-full w-full bg-white opacity-40"></span>
-                        <span className="relative inline-flex h-2 w-2 bg-white"></span>
-                      </span>
-                      Active
-                    </p>
+      <main className="flex-1 overflow-y-auto relative bg-[#050505]">
+        <div className="mavii_wrap py-12 md:py-16 px-6">
+          
+          {activeTab === "manage" && (
+            <div>
+              <div className="wrk-header flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
+                <div>
+                  <h1 style={{ fontFamily: "var(--ff-head)" }} className="text-4xl md:text-5xl mb-6">Database Overview</h1>
+                  <div className="flex flex-wrap gap-x-12 gap-y-6">
+                    <div>
+                      <p className="ci-label text-[10px]">Total Records</p>
+                      <p style={{ fontFamily: "var(--ff-head)" }} className="text-3xl mt-1">{initialWorks.length}</p>
+                    </div>
+                    <div>
+                      <p className="ci-label text-[10px]">Client Base</p>
+                      <p style={{ fontFamily: "var(--ff-head)" }} className="text-3xl mt-1">{Math.max(0, clientTypes.length - 1)}</p>
+                    </div>
+                    <div>
+                      <p className="ci-label text-[10px]">Node Status</p>
+                      <p style={{ fontFamily: "var(--ff-head)" }} className={`text-2xl mt-2 flex items-center gap-3 ${fetchError ? "text-[#c5151b]" : "text-green-500"}`}>
+                        <span className="relative flex h-2 w-2">
+                          <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${fetchError ? "bg-[#c5151b]" : "bg-green-400"}`}></span>
+                          <span className={`relative inline-flex rounded-full h-2 w-2 ${fetchError ? "bg-[#c5151b]" : "bg-green-500"}`}></span>
+                        </span>
+                        {fetchError ? "Degraded" : "Online"}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className="flex flex-col md:flex-row items-end gap-6 mb-12">
-              <div className="w-full md:w-96 ci-group mb-0">
-                <label className="ci-label">Search</label>
-                <input 
-                  type="text" 
-                  placeholder="Search works or clients..." 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  style={{ fontFamily: "var(--ff-body)" }}
-                  className="w-full py-3 bg-transparent border-b border-white/20 text-white placeholder-white/30 focus:outline-none focus:border-white transition-colors"
-                />
-              </div>
-
-              <div className="w-full md:w-64 ci-group mb-0">
-                <label className="ci-label">Filter Client</label>
-                <select 
-                  value={filterType}
-                  onChange={(e) => setFilterType(e.target.value)}
-                  style={{ fontFamily: "var(--ff-body)" }}
-                  className="w-full py-3 bg-transparent border-b border-white/20 text-white focus:outline-none focus:border-white transition-colors appearance-none cursor-pointer rounded-none"
-                >
-                  {clientTypes.map(type => (
-                    <option key={type} value={type} className="bg-black text-white">{type}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="w-full md:w-64 ci-group mb-0">
-                <label className="ci-label">Sort By</label>
-                <select 
-                  value={sortOrder}
-                  onChange={(e) => setSortOrder(e.target.value as any)}
-                  style={{ fontFamily: "var(--ff-body)" }}
-                  className="w-full py-3 bg-transparent border-b border-white/20 text-white focus:outline-none focus:border-white transition-colors appearance-none cursor-pointer rounded-none"
-                >
-                  <option value="newest" className="bg-black text-white">Newest First</option>
-                  <option value="title-asc" className="bg-black text-white">Title (A-Z)</option>
-                  <option value="title-desc" className="bg-black text-white">Title (Z-A)</option>
-                </select>
-              </div>
-            </div>
-            
-            <div className="wrk-grid">
-              {filteredAndSortedWorks.map((work) => (
-                <div key={work.id} className="wrk-item group">
-                  <div className="wrk-visual bg-[#0a0a0a]">
-                    {work.thumbnailUrl || work.bannerUrl ? (
-                      <img src={(work.thumbnailUrl || work.bannerUrl) as string} alt={work.title} />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-white/20 uppercase tracking-widest text-xs font-bold">No Cover</div>
-                    )}
-                    <div className="wrk-overlay">
-                      <span className="wrk-title">{work.title}</span>
-                    </div>
-                    <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                      <button onClick={() => handleEdit(work)} className="ci-pill hover:bg-white hover:text-black transition-colors cursor-pointer">Edit</button>
-                      <button onClick={() => handleDelete(work.id)} className="ci-pill bg-black hover:bg-red-600 border-white/20 transition-colors cursor-pointer">Delete</button>
-                    </div>
-                  </div>
-                  <div className="pt-5">
-                    <h3 style={{ fontFamily: "var(--ff-label)" }} className="text-xl uppercase tracking-wider mb-1">{work.title}</h3>
-                    <p style={{ fontFamily: "var(--ff-body)", color: "var(--pp-muted)" }} className="text-sm">{work.clientName} &middot; {work.clientType}</p>
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <div className="ci-group mb-0">
+                  <label className="ci-label text-[10px]">Search Index</label>
+                  <input 
+                    type="text" 
+                    placeholder="Search query..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    style={{ fontFamily: "var(--ff-body)" }}
+                    className="w-full py-3 bg-transparent border-b border-white/20 text-white placeholder-white/30 focus:outline-none focus:border-white transition-colors text-sm"
+                  />
                 </div>
-              ))}
+
+                <div className="ci-group mb-0">
+                  <label className="ci-label text-[10px]">Filter Parameter</label>
+                  <select 
+                    value={filterType}
+                    onChange={(e) => setFilterType(e.target.value)}
+                    style={{ fontFamily: "var(--ff-body)" }}
+                    className="w-full py-3 bg-transparent border-b border-white/20 text-white focus:outline-none focus:border-white transition-colors appearance-none cursor-pointer rounded-none text-sm"
+                  >
+                    {clientTypes.map(type => (
+                      <option key={type} value={type} className="bg-black text-white">{type}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="ci-group mb-0">
+                  <label className="ci-label text-[10px]">Sort Order</label>
+                  <select 
+                    value={sortOrder}
+                    onChange={(e) => setSortOrder(e.target.value as any)}
+                    style={{ fontFamily: "var(--ff-body)" }}
+                    className="w-full py-3 bg-transparent border-b border-white/20 text-white focus:outline-none focus:border-white transition-colors appearance-none cursor-pointer rounded-none text-sm"
+                  >
+                    <option value="newest" className="bg-black text-white">Chronological</option>
+                    <option value="title-asc" className="bg-black text-white">Alphabetical (A-Z)</option>
+                    <option value="title-desc" className="bg-black text-white">Alphabetical (Z-A)</option>
+                  </select>
+                </div>
+              </div>
               
+              <div className="wrk-grid">
+                {filteredAndSortedWorks.map((work) => (
+                  <div key={work.id} className="wrk-item group">
+                    <div className="wrk-visual">
+                      {work.thumbnailUrl || work.bannerUrl ? (
+                        <img src={(work.thumbnailUrl || work.bannerUrl) as string} alt={work.title} />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-[#111] text-white/20 uppercase tracking-widest text-[10px] font-bold">Awaiting Media</div>
+                      )}
+                      <div className="wrk-overlay">
+                        <span className="wrk-title">{work.title}</span>
+                      </div>
+                      <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+                        <button onClick={() => handleEdit(work)} className="ci-pill hover:bg-white hover:text-black hover:border-white transition-all cursor-pointer">Edit</button>
+                        <button onClick={() => handleDelete(work.id)} className="ci-pill bg-black text-white border-white/20 hover:bg-[#c5151b] hover:border-[#c5151b] transition-all cursor-pointer">Delete</button>
+                      </div>
+                    </div>
+                    <div className="pt-4 flex flex-col gap-1">
+                      <p className="ci-label text-[9px] mb-0">{work.pill}</p>
+                      <h3 style={{ fontFamily: "var(--ff-label)" }} className="text-base uppercase tracking-wider text-white">{work.title}</h3>
+                      <p style={{ fontFamily: "var(--ff-body)", color: "var(--pp-muted)" }} className="text-xs">{work.clientName} &middot; {work.clientType}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
               {filteredAndSortedWorks.length === 0 && (
-                <div className="col-span-full py-20 flex flex-col items-center justify-center text-center">
-                  <p style={{ fontFamily: "var(--ff-body)", color: "var(--pp-muted)" }} className="text-sm uppercase tracking-widest">No works match your current filters.</p>
+                <div className="py-24 flex flex-col items-center justify-center text-center border border-white/10 border-dashed">
+                  <p style={{ fontFamily: "var(--ff-body)", color: "var(--pp-muted)" }} className="text-xs uppercase tracking-widest mb-6">Zero records match active parameters.</p>
                   <button 
                     onClick={() => {setSearchQuery(''); setFilterType('All');}} 
-                    style={{ fontFamily: "var(--ff-label)" }} 
-                    className="mt-4 text-[10px] uppercase tracking-widest text-white border-b border-white hover:text-[#c5151b] hover:border-[#c5151b] pb-1 transition-colors"
+                    className="ci-pill cursor-pointer"
                   >
-                    Clear Filters
+                    Reset Parameters
                   </button>
                 </div>
               )}
             </div>
-          </div>
-        )}
+          )}
 
-        {activeTab === "form" && (
-          <div className="max-w-4xl">
-            <div className="wrk-header mb-12">
-              <h1 style={{ fontFamily: "var(--ff-head)" }} className="text-4xl lg:text-5xl">{editingWork ? "Edit Project" : "New Project"}</h1>
-            </div>
-
-            <form ref={formRef} onSubmit={handleSubmit} className="space-y-12">
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
-                <div className="ci-group mb-0">
-                  <label className="ci-label">Project Title</label>
-                  <input name="title" type="text" defaultValue={editingWork?.title} required style={{ fontFamily: "var(--ff-body)" }} className="w-full py-3 bg-transparent border-b border-white/20 text-white placeholder-white/30 focus:outline-none focus:border-white transition-colors" placeholder="e.g. Neon Horizon" />
-                </div>
-                <div className="ci-group mb-0">
-                  <label className="ci-label">URL Slug</label>
-                  <input name="slug" type="text" defaultValue={editingWork?.slug} required style={{ fontFamily: "var(--ff-body)" }} className="w-full py-3 bg-transparent border-b border-white/20 text-white placeholder-white/30 focus:outline-none focus:border-white transition-colors" placeholder="e.g. neon-horizon" />
-                </div>
-                <div className="ci-group mb-0">
-                  <label className="ci-label">Pill Text</label>
-                  <input name="pill" type="text" defaultValue={editingWork?.pill} required style={{ fontFamily: "var(--ff-body)" }} className="w-full py-3 bg-transparent border-b border-white/20 text-white placeholder-white/30 focus:outline-none focus:border-white transition-colors" placeholder="e.g. Case Study" />
-                </div>
-                <div className="ci-group mb-0">
-                  <label className="ci-label">Client Name</label>
-                  <input name="clientName" type="text" defaultValue={editingWork?.clientName} required style={{ fontFamily: "var(--ff-body)" }} className="w-full py-3 bg-transparent border-b border-white/20 text-white placeholder-white/30 focus:outline-none focus:border-white transition-colors" placeholder="e.g. Acme Corp" />
-                </div>
-                <div className="ci-group mb-0 md:col-span-2">
-                  <label className="ci-label">Client Type</label>
-                  <input name="clientType" type="text" defaultValue={editingWork?.clientType} required style={{ fontFamily: "var(--ff-body)" }} className="w-full py-3 bg-transparent border-b border-white/20 text-white placeholder-white/30 focus:outline-none focus:border-white transition-colors" placeholder="e.g. Tech Startup" />
-                </div>
+          {activeTab === "form" && (
+            <div>
+              <div className="wrk-header mb-12">
+                <h1 style={{ fontFamily: "var(--ff-head)" }} className="text-4xl md:text-5xl">{editingWork ? "Edit Configuration" : "Deploy Project"}</h1>
               </div>
 
-              <div className="ci-group mb-0">
-                <label className="ci-label">Services Provided</label>
-                <input name="services" type="text" defaultValue={editingWork?.services} required style={{ fontFamily: "var(--ff-body)" }} className="w-full py-3 bg-transparent border-b border-white/20 text-white placeholder-white/30 focus:outline-none focus:border-white transition-colors" placeholder="e.g. Branding, UI/UX, Web Development" />
-              </div>
-
-              <div className="ci-group mb-0">
-                <label className="ci-label">The Brief</label>
-                <textarea name="brief" rows={3} defaultValue={editingWork?.brief} required style={{ fontFamily: "var(--ff-body)" }} className="w-full py-3 bg-transparent border-b border-white/20 text-white placeholder-white/30 focus:outline-none focus:border-white transition-colors resize-none" placeholder="Describe the initial problem or request..."></textarea>
-              </div>
-
-              <div className="ci-group mb-0">
-                <label className="ci-label">The Big Idea</label>
-                <textarea name="bigIdea" rows={3} defaultValue={editingWork?.bigIdea} required style={{ fontFamily: "var(--ff-body)" }} className="w-full py-3 bg-transparent border-b border-white/20 text-white placeholder-white/30 focus:outline-none focus:border-white transition-colors resize-none" placeholder="Explain the creative approach and execution..."></textarea>
-              </div>
-
-              <div className="ci-group mb-0">
-                <label className="ci-label">The Result</label>
-                <textarea name="result" rows={3} defaultValue={editingWork?.result} required style={{ fontFamily: "var(--ff-body)" }} className="w-full py-3 bg-transparent border-b border-white/20 text-white placeholder-white/30 focus:outline-none focus:border-white transition-colors resize-none" placeholder="Share the final impact and metrics..."></textarea>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8 pt-8 border-t border-white/10">
-                <div className="ci-group mb-0">
-                  <label className="ci-label">Thumbnail Image</label>
-                  <input type="file" accept="image/*" onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)} style={{ fontFamily: "var(--ff-body)" }} className="w-full py-3 bg-transparent text-white file:mr-4 file:py-2 file:px-4 file:rounded-none file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-widest file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 transition-colors cursor-pointer" />
-                  {thumbnailFile ? (
-                    <p className="text-[10px] uppercase tracking-widest text-green-400 mt-2">New file: {thumbnailFile.name}</p>
-                  ) : editingWork?.thumbnailUrl ? (
-                    <p className="text-[10px] uppercase tracking-widest text-white/50 mt-2">Active thumbnail present</p>
-                  ) : null}
+              <form ref={formRef} onSubmit={handleSubmit} className="space-y-12">
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+                  <div className="ci-group mb-0">
+                    <label className="ci-label">Project Title</label>
+                    <input name="title" type="text" defaultValue={editingWork?.title} required style={{ fontFamily: "var(--ff-body)" }} className="w-full py-3 bg-transparent border-b border-white/20 text-white placeholder-white/20 focus:outline-none focus:border-white transition-colors text-sm" placeholder="e.g. Neon Horizon" />
+                  </div>
+                  <div className="ci-group mb-0">
+                    <label className="ci-label">URL Slug</label>
+                    <input name="slug" type="text" defaultValue={editingWork?.slug} required style={{ fontFamily: "var(--ff-body)" }} className="w-full py-3 bg-transparent border-b border-white/20 text-white placeholder-white/20 focus:outline-none focus:border-white transition-colors text-sm" placeholder="e.g. neon-horizon" />
+                  </div>
+                  <div className="ci-group mb-0">
+                    <label className="ci-label">Pill Identifier</label>
+                    <input name="pill" type="text" defaultValue={editingWork?.pill} required style={{ fontFamily: "var(--ff-body)" }} className="w-full py-3 bg-transparent border-b border-white/20 text-white placeholder-white/20 focus:outline-none focus:border-white transition-colors text-sm" placeholder="e.g. Case Study" />
+                  </div>
+                  <div className="ci-group mb-0">
+                    <label className="ci-label">Client Entity</label>
+                    <input name="clientName" type="text" defaultValue={editingWork?.clientName} required style={{ fontFamily: "var(--ff-body)" }} className="w-full py-3 bg-transparent border-b border-white/20 text-white placeholder-white/20 focus:outline-none focus:border-white transition-colors text-sm" placeholder="e.g. Acme Corp" />
+                  </div>
+                  <div className="ci-group mb-0 md:col-span-2">
+                    <label className="ci-label">Industry / Sector</label>
+                    <input name="clientType" type="text" defaultValue={editingWork?.clientType} required style={{ fontFamily: "var(--ff-body)" }} className="w-full py-3 bg-transparent border-b border-white/20 text-white placeholder-white/20 focus:outline-none focus:border-white transition-colors text-sm" placeholder="e.g. Tech Startup" />
+                  </div>
+                  <div className="ci-group mb-0 md:col-span-2">
+                    <label className="ci-label">Services Provided</label>
+                    <input name="services" type="text" defaultValue={editingWork?.services} required style={{ fontFamily: "var(--ff-body)" }} className="w-full py-3 bg-transparent border-b border-white/20 text-white placeholder-white/20 focus:outline-none focus:border-white transition-colors text-sm" placeholder="e.g. Branding, UI/UX" />
+                  </div>
                 </div>
-                <div className="ci-group mb-0">
-                  <label className="ci-label">Banner Image</label>
-                  <input type="file" accept="image/*" onChange={(e) => setBannerFile(e.target.files?.[0] || null)} style={{ fontFamily: "var(--ff-body)" }} className="w-full py-3 bg-transparent text-white file:mr-4 file:py-2 file:px-4 file:rounded-none file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-widest file:bg-white file:text-black hover:file:bg-zinc-200 transition-colors cursor-pointer" />
-                  {bannerFile ? (
-                    <p className="text-[10px] uppercase tracking-widest text-green-400 mt-2">New file: {bannerFile.name}</p>
-                  ) : editingWork?.bannerUrl ? (
-                    <p className="text-[10px] uppercase tracking-widest text-white/50 mt-2">Active banner present</p>
-                  ) : null}
+
+                <div className="space-y-10">
+                  <div className="ci-group mb-0">
+                    <label className="ci-label">Project Brief</label>
+                    <textarea name="brief" rows={4} defaultValue={editingWork?.brief} required style={{ fontFamily: "var(--ff-body)" }} className="w-full py-3 bg-transparent border-b border-white/20 text-white placeholder-white/20 focus:outline-none focus:border-white transition-colors resize-y text-sm" placeholder="Define the core objective..."></textarea>
+                  </div>
+                  <div className="ci-group mb-0">
+                    <label className="ci-label">The Big Idea</label>
+                    <textarea name="bigIdea" rows={4} defaultValue={editingWork?.bigIdea} required style={{ fontFamily: "var(--ff-body)" }} className="w-full py-3 bg-transparent border-b border-white/20 text-white placeholder-white/20 focus:outline-none focus:border-white transition-colors resize-y text-sm" placeholder="Detail the strategic approach..."></textarea>
+                  </div>
+                  <div className="ci-group mb-0">
+                    <label className="ci-label">Execution Result</label>
+                    <textarea name="result" rows={4} defaultValue={editingWork?.result} required style={{ fontFamily: "var(--ff-body)" }} className="w-full py-3 bg-transparent border-b border-white/20 text-white placeholder-white/20 focus:outline-none focus:border-white transition-colors resize-y text-sm" placeholder="Outline the final impact..."></textarea>
+                  </div>
                 </div>
-                <div className="ci-group mb-0 md:col-span-2">
-                  <label className="ci-label flex justify-between">
-                    <span>Gallery Images</span>
-                    <span style={{ textTransform: "lowercase", letterSpacing: "normal" }} className="text-white/40">{galleryFiles.length} selected</span>
-                  </label>
-                  <div 
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onDrop={handleDrop}
-                    className={`relative w-full py-10 mt-2 border-2 border-dashed ${isDragging ? "border-white bg-white/5" : "border-white/20 bg-transparent"} transition-colors flex flex-col items-center justify-center text-center`}
-                  >
-                    <input type="file" accept="image/*" multiple onChange={handleGallerySelect} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                    <span style={{ fontFamily: "var(--ff-body)" }} className="text-sm text-white/40">Drag & drop gallery files here or click to browse</span>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10 pt-10 border-t border-white/10">
+                  <div className="ci-group mb-0">
+                    <label className="ci-label">Thumbnail Asset</label>
+                    <div className="mt-3 relative border border-white/20 p-4 bg-[#111] hover:bg-[#1a1a1a] transition-colors text-center cursor-pointer">
+                      <input type="file" accept="image/*" onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                      <span style={{ fontFamily: "var(--ff-body)" }} className="text-xs text-white/60 uppercase tracking-widest">{thumbnailFile ? thumbnailFile.name : "Select File"}</span>
+                    </div>
+                    {editingWork?.thumbnailUrl && !thumbnailFile && <p className="text-[10px] uppercase tracking-widest text-white/40 mt-3">Active asset detected in system</p>}
                   </div>
 
-                  {galleryFiles.length > 0 && (
-                    <div className="mt-4 flex flex-col gap-2">
-                      {galleryFiles.map((file, idx) => (
-                        <div key={`${file.name}-${idx}`} className="flex items-center justify-between py-2 border-b border-white/10">
-                          <span style={{ fontFamily: "var(--ff-body)" }} className="text-xs text-white/70 truncate">{file.name}</span>
-                          <button type="button" onClick={() => removeGalleryFile(idx)} className="text-white/40 hover:text-red-500 transition-colors">
-                            &times;
-                          </button>
-                        </div>
-                      ))}
+                  <div className="ci-group mb-0">
+                    <label className="ci-label">Banner Asset</label>
+                    <div className="mt-3 relative border border-white/20 p-4 bg-white text-black hover:bg-white/90 transition-colors text-center cursor-pointer">
+                      <input type="file" accept="image/*" onChange={(e) => setBannerFile(e.target.files?.[0] || null)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                      <span style={{ fontFamily: "var(--ff-label)" }} className="text-xs uppercase tracking-widest font-bold">{bannerFile ? bannerFile.name : "Select File"}</span>
                     </div>
-                  )}
-                </div>
-              </div>
+                    {editingWork?.bannerUrl && !bannerFile && <p className="text-[10px] uppercase tracking-widest text-white/40 mt-3">Active asset detected in system</p>}
+                  </div>
 
-              <div className="pt-8 flex items-center gap-6">
-                <button 
-                  type="submit" 
-                  disabled={isSubmitting}
-                  style={{ fontFamily: "var(--ff-label)", backgroundColor: "var(--pp-card-red)", color: "var(--page-ink)" }}
-                  className="px-10 py-4 text-xs font-bold tracking-[0.15em] uppercase hover:bg-white hover:text-black transition-colors disabled:opacity-50 flex items-center gap-3"
-                >
-                  {isSubmitting ? "Processing..." : (editingWork ? "Update Project" : "Publish Project")}
-                </button>
-                {editingWork && (
+                  <div className="ci-group mb-0 md:col-span-2">
+                    <div className="flex justify-between items-end mb-3">
+                      <label className="ci-label mb-0">Gallery Assets</label>
+                      <span style={{ fontFamily: "var(--ff-body)" }} className="text-[10px] uppercase tracking-widest text-white/40">{galleryFiles.length} files queued</span>
+                    </div>
+                    
+                    <div 
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                      className={`relative w-full py-12 border border-dashed ${isDragging ? "border-white bg-[#111]" : "border-white/20 bg-transparent"} transition-all flex flex-col items-center justify-center text-center`}
+                    >
+                      <input type="file" accept="image/*" multiple onChange={handleGallerySelect} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                      <span style={{ fontFamily: "var(--ff-body)" }} className="text-xs uppercase tracking-widest text-white/40">Drag files here or click to browse system</span>
+                    </div>
+
+                    {galleryFiles.length > 0 && (
+                      <div className="mt-6 flex flex-col gap-3">
+                        {galleryFiles.map((file, idx) => (
+                          <div key={`${file.name}-${idx}`} className="flex items-center justify-between pb-3 border-b border-white/10">
+                            <span style={{ fontFamily: "var(--ff-body)" }} className="text-xs text-white/70 truncate mr-4">{file.name}</span>
+                            <button type="button" onClick={() => removeGalleryFile(idx)} className="text-[10px] uppercase tracking-widest text-white/30 hover:text-[#c5151b] transition-colors flex-shrink-0">
+                              Remove
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="pt-10 flex flex-wrap items-center gap-6 relative">
                   <button 
-                    type="button" 
-                    onClick={resetForm}
+                    type="submit" 
                     disabled={isSubmitting}
                     style={{ fontFamily: "var(--ff-label)" }}
-                    className="px-10 py-4 text-xs font-bold tracking-[0.15em] uppercase text-white bg-transparent border border-white/20 hover:border-white transition-colors disabled:opacity-50"
+                    className={`px-8 py-4 text-[11px] font-bold tracking-[0.15em] uppercase transition-colors disabled:opacity-50 flex items-center gap-3 ${isSubmitting ? "bg-white/10 text-white" : "bg-[#c5151b] text-white hover:bg-white hover:text-black"}`}
                   >
-                    Cancel
+                    {isSubmitting ? "Executing..." : (editingWork ? "Update Record" : "Deploy Record")}
                   </button>
-                )}
-                {isSubmitting && loadingState && (
-                  <span style={{ fontFamily: "var(--ff-body)" }} className="text-xs text-white/50 animate-pulse ml-2">{loadingState}</span>
-                )}
-              </div>
-            </form>
-          </div>
-        )}
-
+                  {editingWork && (
+                    <button 
+                      type="button" 
+                      onClick={resetForm}
+                      disabled={isSubmitting}
+                      style={{ fontFamily: "var(--ff-label)" }}
+                      className="px-8 py-4 text-[11px] font-bold tracking-[0.15em] uppercase text-white bg-transparent border border-white/20 hover:border-white transition-colors disabled:opacity-50"
+                    >
+                      Abort Edit
+                    </button>
+                  )}
+                  {isSubmitting && loadingState && (
+                    <span style={{ fontFamily: "var(--ff-body)" }} className="text-[10px] uppercase tracking-widest text-[#c5151b] animate-pulse font-bold">{loadingState}</span>
+                  )}
+                </div>
+              </form>
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );
