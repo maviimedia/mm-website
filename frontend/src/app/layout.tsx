@@ -3,6 +3,7 @@ import "./globals.css";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import SmoothScroll from "../components/SmoothScroll";
+import GlobalDock from "../components/GlobalDock";
 
 export const metadata: Metadata = {
   title: "MAVIIMEDA",
@@ -32,6 +33,7 @@ export default function RootLayout({
           {children}
           <Footer />
         </SmoothScroll>
+        <GlobalDock />
       </body>
     </html>
   );
