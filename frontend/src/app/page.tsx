@@ -10,7 +10,7 @@ export default async function Home() {
         <div className="mavii_wrap flex flex-col lg:flex-row gap-12 lg:gap-24">
           <div className="w-full lg:w-1/2">
             <p className="font-['ArizonaFlare'] text-xl md:text-3xl lg:text-3xl leading-none font-light">
-              Hello, we genuinely care about your business like it's our own, and we work with you like a partner.
+              Hello, we work as your true partner to build your brand, websites, and software with clear communication and on-time delivery.
             </p>
           </div>
           <div className="w-full lg:w-1/2">

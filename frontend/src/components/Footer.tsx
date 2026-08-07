@@ -33,21 +33,19 @@ export default function Footer() {
           </div>
           <div className="footer-pp__col">
             <h4 className="footer-pp__heading">Connect</h4>
-            <Link className="footer-pp__link" href="#">
+            <Link className="footer-pp__link" href="https://www.facebook.com/maviimedia/">
               Facebook
             </Link>
-            <Link className="footer-pp__link" href="#">
+            <Link className="footer-pp__link" href="https://www.instagram.com/maviimedia/">
               Instagram
             </Link>
           </div>
           <div className="footer-pp__col">
             <h4 className="footer-pp__heading">Location</h4>
             <p className="footer-pp__text">
-              Mantri Park
-              <br />
               Goregaon East
               <br />
-              Mumbai 400065
+              Mumbai—400065
             </p>
           </div>
           <div className="footer-pp__col">
@@ -56,8 +54,6 @@ export default function Footer() {
               Mumbai
               <br />
               Pune
-              <br />
-              New Delhi
             </p>
           </div>
         </div>
