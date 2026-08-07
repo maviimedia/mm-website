@@ -6,16 +6,38 @@ export default async function Home() {
 
   return (
     <>
+      <section className="py-20 px-6 lg:px-10 text-white">
+        <div className="mavii_wrap flex flex-col lg:flex-row gap-12 lg:gap-24">
+          <div className="w-full lg:w-1/2">
+            <p className="font-['ArizonaFlare'] text-xl md:text-3xl lg:text-3xl leading-none font-light">
+              Hello, we genuinely care about your business like it's our own, and we work with you like a partner.
+            </p>
+          </div>
+          <div className="w-full lg:w-1/2">
+            <div className="grid grid-cols-2 gap-8">
+              <div>
+                <span className="block font-['ArizonaFlare'] text-6xl md:text-6xl">100%</span>
+                <span className="font-['HelveestiLabel'] text-[11px] tracking-[0.1em] uppercase text-[#7d7d7d]">ON-TIME DELIVERY</span>
+              </div>
+              <div>
+                <span className="block font-['ArizonaFlare'] text-6xl md:text-6xl">24/7</span>
+                <span className="font-['HelveestiLabel'] text-[11px] tracking-[0.1em] uppercase text-[#7d7d7d]">CLIENT SUPPORT</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section id="media" className="media">
         <div className="mavii_wrap">
           <MediaGrid works={allWorks || []} />
         </div>
       </section>
 
-      <section className="bg-[#000000] py-6 text-center">
+      <section className="bg-black py-6 text-center">
         <div className="mavii_wrap px-6 lg:px-10">
-          <h2 className="font-['HelveestiLabel'] text-[12px] tracking-[0.12em] uppercase text-[#7d7d7d] mb-6">
-            Our Clients
+          <h2 className="font-['HelveestiLabel'] text-[20px] tracking-[0.12em] uppercase text-[#7d7d7d] mb-12">
+            #Beloved Clients
           </h2>
           
           <div className="relative w-full flex overflow-hidden [mask-image:_linear-gradient(to_right,transparent_0,_black_15%,_black_85%,transparent_100%)]">

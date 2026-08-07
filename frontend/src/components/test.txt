@@ -1,0 +1,116 @@
+      HOME
+
+      <section className="py-20 px-6 lg:px-10 text-white">
+        <div className="mavii_wrap flex flex-col lg:flex-row gap-12 lg:gap-24 items-center">
+          <div className="w-full lg:w-1/2">
+            <p className="font-['ArizonaFlare'] text-xl md:text-3xl lg:text-3xl leading-none font-light">
+              Hello, we genuinely care about your business like it's our own, and we work with you like a partner.
+            </p>
+          </div>
+          <div className="w-full lg:w-1/2">
+            <div className="grid grid-cols-2 gap-8 pt-8">
+              <div>
+                <span className="block font-['ArizonaFlare'] text-6xl md:text-6xl">100%</span>
+                <span className="font-['HelveestiLabel'] text-[11px] tracking-[0.1em] uppercase text-[#7d7d7d]">ON-TIME DELIVERY</span>
+              </div>
+              <div>
+                <span className="block font-['ArizonaFlare'] text-6xl md:text-6xl">24/7</span>
+                <span className="font-['HelveestiLabel'] text-[11px] tracking-[0.1em] uppercase text-[#7d7d7d]">CLIENT SUPPORT</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-2 px-6 lg:px-10 bg-black">
+        <div className="mavii_wrap max-w-5xl mx-auto lg:px-40">
+          <div className="bg-[#050505] border border-white/10 rounded-xl overflow-hidden shadow-2xl">
+            <div className="bg-[#0a0a0a] px-4 py-3 flex items-center gap-2 border-b border-white/10">
+              <div className="w-3 h-3 rounded-full bg-[#ff5f56]"></div>
+              <div className="w-3 h-3 rounded-full bg-[#ffbd2e]"></div>
+              <div className="w-3 h-3 rounded-full bg-[#27c93f]"></div>
+              <span className="ml-4 font-mono text-[11px] text-[#7d7d7d] tracking-widest">maviimedia ~/engineering</span>
+            </div>
+            <div className="p-6 md:p-10 font-mono text-sm md:text-base text-[#a7a9ac] leading-loose">
+              <span className="text-[#27c93f]">guest@maviimedia</span><span className="text-white">:</span><span className="text-[#4b9cd3]">~</span><span className="text-white">$</span> npx execute-vision<br /><br />
+              <span className="text-white">Initializing digital architecture...</span><br />
+              <span className="text-[#ffbd2e]">&gt; Loading Core Capabilities:</span><br />
+              &nbsp;&nbsp;- Strategic Rebranding [OK]<br />
+              &nbsp;&nbsp;- SaaS &amp; Platform Building [OK]<br />
+              &nbsp;&nbsp;- Digital Architecture [OK]<br /><br />
+              <span className="text-[#27c93f]">Success:</span> Strict project timelines established.<br />
+              <span className="text-white animate-pulse">_</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-24 px-6 lg:px-10 bg-[#050505]">
+        <div className="mavii_wrap">
+          <h2 className="font-['HelveestiLabel'] text-[14px] tracking-[0.15em] uppercase text-[#7d7d7d] mb-12 text-center">
+            Capabilities &amp; Services
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-[220px]">
+            <div className="md:col-span-2 lg:col-span-2 bg-[#0a0a0a] rounded-2xl p-8 border border-white/5 flex flex-col justify-end relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent z-10"></div>
+              <div className="relative z-20">
+                <h3 className="font-['ArizonaFlare'] text-2xl md:text-3xl text-white mb-2">SAAS Development</h3>
+                <p className="font-['HelveestiUI'] text-sm text-[#a7a9ac]">Building scalable MVP platforms and robust digital architectures.</p>
+              </div>
+            </div>
+            <div className="bg-[#111] rounded-2xl p-8 border border-white/5 flex flex-col justify-between">
+              <span className="font-['HelveestiLabel'] text-[10px] tracking-widest text-[#c5151b] uppercase">Design</span>
+              <h3 className="font-['HelveestiUI'] text-lg text-white">UI Design &amp; Branding</h3>
+            </div>
+            <div className="bg-[#0a0a0a] rounded-2xl p-8 border border-white/5 flex items-center justify-center text-center">
+              <h3 className="font-['HelveestiUI'] text-lg text-[#a7a9ac]">Chrome Extension Development</h3>
+            </div>
+            <div className="bg-[#111] rounded-2xl p-8 border border-white/5 flex items-center justify-center text-center">
+              <h3 className="font-['HelveestiUI'] text-lg text-[#a7a9ac]">Website &amp; Mobile App</h3>
+            </div>
+            <div className="md:col-span-2 lg:col-span-3 bg-[#c5151b] rounded-2xl p-8 flex flex-col justify-center">
+              <h3 className="font-['ArizonaFlare'] text-2xl md:text-4xl text-white mb-4">Strategic Rebranding</h3>
+              <p className="font-['HelveestiUI'] text-white/80 max-w-xl text-sm md:text-base">
+                Delivering customized solutions with transparent communication, quality revisions, and professional documentation.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+            <section className="py-10 px-6 lg:px-10">
+        <div className="mavii_wrap overflow-hidden">
+          <div className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-8 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <div className="snap-start shrink-0 w-[90vw] md:w-[60vw] lg:w-[45vw] bg-[#0a0a0a] border border-white/10 rounded-2xl p-8 md:p-12">
+              <p className="font-['ArizonaFlare'] text-xl md:text-2xl text-white mb-8">"Their transparent communication and strictly maintained timelines made the entire SaaS development process seamless."</p>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-[#111] border border-white/5"></div>
+                <div>
+                  <p className="font-['HelveestiUI'] text-sm text-white uppercase tracking-widest">Global Partner</p>
+                  <p className="font-['HelveestiUI'] text-xs text-[#7d7d7d]">Software Engineering</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="snap-start shrink-0 w-[90vw] md:w-[60vw] lg:w-[45vw] bg-[#0a0a0a] border border-white/10 rounded-2xl p-8 md:p-12">
+              <p className="font-['ArizonaFlare'] text-xl md:text-2xl text-white mb-8">"Detailed agreements, quality revisions, and absolute data confidentiality. They truly care about the business."</p>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-[#111] border border-white/5"></div>
+                <div>
+                  <p className="font-['HelveestiUI'] text-sm text-white uppercase tracking-widest">Enterprise Client</p>
+                  <p className="font-['HelveestiUI'] text-xs text-[#7d7d7d]">Strategic Rebranding</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+            <section id="media" className="media pt-10 pb-20">
+        <div className="mavii_wrap">
+          <h2 className="font-['HelveestiLabel'] text-[20px] tracking-[0.15em] uppercase text-[#7d7d7d] mb-12 text-center px-6">
+            #OUR WORKS
+          </h2>
+          <MediaGrid works={allWorks || []} />
+        </div>
+      </section>
