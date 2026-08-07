@@ -18,12 +18,20 @@ mm-main/
         postcss.config.mjs
         tsconfig.json
         public/
+            about.svg
+            contact.svg
+            email.svg
             file.svg
             globe.svg
             manifest.json
             next.svg
+            phone.svg
+            thunder.png
+            thunder.svg
             vercel.svg
             window.svg
+            work.svg
+            works.svg
             assets/
                 Logo-ICON.svg
                 MAVIIMEDIA.svg
@@ -65,8 +73,10 @@ mm-main/
                         page.tsx
             components/
                 Footer.tsx
+                GlobalDock.tsx
                 Header.tsx
                 InfiniteWorkList.tsx
+                MediaGrid.tsx
                 SmoothScroll.tsx
                 WorkSkeleton.tsx
                 ui/

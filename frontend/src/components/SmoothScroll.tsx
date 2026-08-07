@@ -6,7 +6,6 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ScrollSmoother } from "gsap/ScrollSmoother";
 import { useGSAP } from "@gsap/react";
 
-// Plugins register karna zaroori hai
 gsap.registerPlugin(ScrollTrigger, ScrollSmoother, useGSAP);
 
 export default function SmoothScroll({ children }: { children: React.ReactNode }) {
@@ -15,12 +14,13 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
 
   useGSAP(
     () => {
-      // ScrollSmoother initialization
       ScrollSmoother.create({
         wrapper: wrapper.current,
         content: content.current,
-        smooth: 1.5, // Scroll kitna smooth hoga (seconds)
-        effects: true, // Parallax aur baki effects enable karne ke liye
+        smooth: 1.5,
+        effects: true,
+        smoothTouch: 0.1,
+        normalizeScroll: true
       });
     },
     { scope: wrapper }
