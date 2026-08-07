@@ -1,7 +1,11 @@
+"use client";
+
 import Link from "next/link";
-import Image from "next/image";
+import { usePathname } from "next/navigation";
 
 export default function Header() {
+  const pathname = usePathname();
+
   return (
     <section id="header" className="header">
       <div className="mavii_wrap">
@@ -19,13 +23,22 @@ export default function Header() {
             />
           </div>
           <nav className="header__nav" aria-label="Primary">
-            <Link href="/" className="header__nav-link">
+            <Link
+              href="/"
+              className={`header__nav-link ${pathname === "/" ? "active" : ""}`}
+            >
               WORK
             </Link>
-            <Link href="/about" className="header__nav-link">
+            <Link
+              href="/about"
+              className={`header__nav-link ${pathname === "/about" ? "active" : ""}`}
+            >
               ABOUT
             </Link>
-            <Link href="/contact" className="header__nav-link">
+            <Link
+              href="/contact"
+              className={`header__nav-link ${pathname === "/contact" ? "active" : ""}`}
+            >
               CONTACT
             </Link>
           </nav>

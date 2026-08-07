@@ -851,3 +851,10 @@ strong, b, .btn, .eyebrow, .label { font-family: var(--ff-label); font-weight: 7
     opacity: .5;
   }
 }
+
+.header__nav-link.active {
+  opacity: 1;
+  text-decoration: underline;
+  text-underline-offset: 6px;
+  text-decoration-thickness: 1px;
+}
