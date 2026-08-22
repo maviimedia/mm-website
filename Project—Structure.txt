@@ -39,6 +39,17 @@ mm-main/
                 maviimedia-favicon.svg
                 plymouthgin.png
                 royalsalute.png
+            clients/
+                APNA.png
+                EDFORCE.png
+                GODREJ.png
+                KLONOO.png
+                KYROS.png
+                LAPTOP STUDIO.png
+                LOCOLAYER.png
+                RETRO STATION.png
+                SOUL.png
+                XTL.png
             fonts/
                 arizona_flare_300_italic_headings_h1-h6.woff2
                 arizona_flare_300_normal_headings_h1-h6.woff2
@@ -79,6 +90,7 @@ mm-main/
                 MediaGrid.tsx
                 SmoothScroll.tsx
                 WorkSkeleton.tsx
+                test.txt
                 ui/
                     button.tsx
             lib/
