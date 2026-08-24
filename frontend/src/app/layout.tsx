@@ -6,7 +6,7 @@ import SmoothScroll from "../components/SmoothScroll";
 import GlobalDock from "../components/GlobalDock";
 
 export const metadata: Metadata = {
-  title: "MAVIIMEDA",
+  title: "Website & Software Development Agency — MAVIIMEDIA",
   description: "Brand Building & Software Engineering Studio",
   manifest: "/manifest.json",
   icons: {
