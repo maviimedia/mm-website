@@ -3,7 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
-import { supabase } from "../../lib/supabase";
+import { supabaseAdmin } from "../../lib/supabaseAdmin";
 
 export async function loginAdmin(formData: FormData) {
   const username = formData.get("username") as string;
@@ -13,11 +13,15 @@ export async function loginAdmin(formData: FormData) {
     return { error: "Username and password are required" };
   }
 
-  const { data: adminList } = await supabase
+  const { data: adminList, error: dbError } = await supabaseAdmin
     .from("admins")
     .select("*")
     .eq("username", username);
-    
+
+  if (dbError) {
+    return { error: dbError.message };
+  }
+
   const admin = adminList?.[0];
 
   if (!admin) {
@@ -25,6 +29,10 @@ export async function loginAdmin(formData: FormData) {
   }
 
   const dbPasswordHash = admin.password_hash || admin.passwordHash;
+
+  if (!dbPasswordHash) {
+    return { error: "Password hash missing in database" };
+  }
 
   const isValid = await bcrypt.compare(password, dbPasswordHash);
   if (!isValid) {

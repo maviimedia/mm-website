@@ -5,6 +5,19 @@ import { loginAdmin } from "../actions";
 
 export default function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (formData: FormData) => {
+    setLoading(true);
+    setErrorMessage(null);
+
+    const res = await loginAdmin(formData);
+    if (res?.error) {
+      setErrorMessage(res.error);
+      setLoading(false);
+    }
+  };
 
   return (
     <main 
@@ -28,13 +41,13 @@ export default function AdminLogin() {
           </p>
         </div>
 
-        <form 
-          action={async (formData) => {
-            await loginAdmin(formData);
-          }} 
-          className="flex flex-col gap-10"
-        >
-          
+        {errorMessage && (
+          <div className="p-3 bg-red-950/40 border border-red-500/50 rounded text-red-400 text-xs text-center font-mono">
+            {errorMessage}
+          </div>
+        )}
+
+        <form action={handleSubmit} className="flex flex-col gap-10">
           <div className="flex flex-col gap-8">
             <div className="relative flex flex-col">
               <label htmlFor="username" className="text-[11px] font-semibold tracking-widest uppercase text-white/80">
@@ -85,8 +98,8 @@ export default function AdminLogin() {
                     </svg>
                   ) : (
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.543 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.543 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
                   )}
                 </button>
@@ -95,42 +108,19 @@ export default function AdminLogin() {
           </div>
 
           <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="remember"
-                name="remember"
-                className="w-3.5 h-3.5 bg-transparent border-white/20 rounded accent-[var(--pp-card-red)] focus:ring-0 focus:outline-none cursor-pointer"
-              />
-              <label 
-                htmlFor="remember" 
-                style={{ fontFamily: "var(--ff-body)", color: "var(--pp-muted)" }}
-                className="text-[11px] cursor-pointer select-none"
-              >
-                Remember my credentials
-              </label>
-            </div>
-
             <button
               type="submit"
+              disabled={loading}
               style={{ 
                 fontFamily: "var(--ff-label)", 
                 backgroundColor: "var(--pp-card-red)", 
                 color: "var(--page-ink)" 
               }}
-              className="w-full py-3 text-[11px] font-bold tracking-[0.15em] uppercase transition-all duration-300 ease-out transform hover:bg-white hover:text-black hover:-translate-y-0.5 hover:shadow-[0_4px_15px_rgba(255,255,255,0.1)] active:translate-y-0"
+              className="w-full py-3 text-[11px] font-bold tracking-[0.15em] uppercase transition-all duration-300 ease-out transform hover:bg-white hover:text-black hover:-translate-y-0.5 hover:shadow-[0_4px_15px_rgba(255,255,255,0.1)] active:translate-y-0 disabled:opacity-50"
             >
-              Authenticate
+              {loading ? "Authenticating..." : "Authenticate"}
             </button>
-
-            <p 
-              style={{ fontFamily: "var(--ff-body)", color: "var(--pp-muted)" }} 
-              className="text-[9px] text-center opacity-40 tracking-widest leading-relaxed uppercase"
-            >
-              Authorized personnel only. By authenticating, you agree to internal access policies and data guidelines.
-            </p>
           </div>
-          
         </form>
       </div>
     </main>
