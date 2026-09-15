@@ -1,5 +1,6 @@
 import { supabase } from "../lib/supabase";
 import MediaGrid from "../components/MediaGrid";
+import TechPlatforms from "../components/TechPlatforms";
 
 export default async function Home() {
   const { data: allWorks } = await supabase
@@ -36,6 +37,8 @@ export default async function Home() {
           <MediaGrid works={allWorks || []} />
         </div>
       </section>
+
+      <TechPlatforms />
 
       <section className="bg-black py-6 text-center">
         <div className="mavii_wrap px-6 lg:px-10">
