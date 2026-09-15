@@ -9,9 +9,9 @@ export async function fetchWorksPagination(page: number, limit: number = 8) {
 
     const { data, error } = await supabase
       .from("works")
-      .select("id, title, slug, banner_url, client_name")
-      .range(from, to)
-      .order("created_at", { ascending: false });
+      .select("id, title, slug, thumbnail_url, banner_url, client_name")
+      .order("created_at", { ascending: false })
+      .range(from, to);
 
     if (error) {
       throw new Error(error.message);

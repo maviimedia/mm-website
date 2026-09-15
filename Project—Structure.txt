@@ -1,6 +1,7 @@
 mm-main/
     LICENSE
     README.md
+    Tech—Stack.txt
     package-lock.json
     package.json
     frontend/
@@ -95,5 +96,6 @@ mm-main/
                     button.tsx
             lib/
                 supabase.ts
+                supabaseAdmin.ts
                 utils.ts
                 workActions.ts

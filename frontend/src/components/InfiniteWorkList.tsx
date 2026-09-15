@@ -73,7 +73,7 @@ export default function InfiniteWorkList({ initialWorks }: { initialWorks: any[]
               <Link href={`/works/${work.slug}`}>
                 <div className="wrk-visual">
                   <img 
-                    src={work.banner_url} 
+                    src={work.thumbnail_url || work.banner_url} 
                     alt={work.title} 
                     loading="lazy" 
                   />

@@ -2,7 +2,10 @@ import { supabase } from "../lib/supabase";
 import MediaGrid from "../components/MediaGrid";
 
 export default async function Home() {
-  const { data: allWorks } = await supabase.from("works").select("*");
+  const { data: allWorks } = await supabase
+    .from("works")
+    .select("*")
+    .order("created_at", { ascending: false });
 
   return (
     <>
