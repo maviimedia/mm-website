@@ -98,12 +98,9 @@ export default function TechPlatforms() {
 
       <div className="mavii_wrap">
         <div className="flex flex-col md:flex-row md:items-baseline justify-between gap-4 pb-12 border-b border-white/10">
-          <h2 className="font-['HelveestiLabel'] text-xs tracking-[0.25em] uppercase text-[#777]">
-            [ 03 / CAPABILITIES & TECH STACK ]
+          <h2 className="font-['ArizonaFlare'] text-xl sm:text-2xl lg:text-3xl text-[#d4d4d4] hover:text-white transition-colors duration-150 cursor-default font-light">
+            [ ֎ Technology Platforms We Use ]
           </h2>
-          <span className="font-['Helveesti'] text-sm text-[#888] font-light">
-            GREAT FOR SPEED, SCALE & PERFORMANCE.
-          </span>
         </div>
 
         <div className="divide-y divide-white/10">
