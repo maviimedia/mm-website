@@ -21,10 +21,9 @@ const servicesData: ServiceItem[] = [
       "Research & Insights",
       "Market Positioning",
       "Value Proposition",
-      "Personality Traits",
       "Verbal Identity",
     ],
-    image: "/ed-force.webp",
+    image: "/branding-service.webp",
     bgColor: "bg-[#BFB5FF]",
     textColor: "text-[#111111]",
     pillBg: "bg-black/10 text-black border-black/10",
@@ -35,13 +34,12 @@ const servicesData: ServiceItem[] = [
     description:
       "Visual identity is the unique visual language of your brand, creating memorable impressions and emotional connections with your audience.",
     tags: [
-      "Logomark & Type",
       "Art Direction",
       "Brand Guidelines",
       "Design Systems",
       "Packaging",
     ],
-    image: "/soul-soil.webp",
+    image: "/identity-service.webp",
     bgColor: "bg-[#F4F4F4]",
     textColor: "text-[#111111]",
     pillBg: "bg-black/10 text-black border-black/10",
@@ -52,13 +50,12 @@ const servicesData: ServiceItem[] = [
     description:
       "Our website design services blend innovation and creativity to deliver user-centric solutions that elevate your brand and engage your audience.",
     tags: [
-      "UX Design",
-      "User Testing",
+      "UI/UX Design",
       "Next.js Systems",
       "Creative Motion",
       "Web Applications",
     ],
-    image: "/laptop-studio.webp",
+    image: "/website-service.webp",
     bgColor: "bg-[#F7D378]",
     textColor: "text-[#111111]",
     pillBg: "bg-black/10 text-black border-black/10",
@@ -72,10 +69,9 @@ const servicesData: ServiceItem[] = [
       "Product Strategy",
       "Mobile UI/UX",
       "Interactive Prototypes",
-      "User Validation",
       "SaaS Architecture",
     ],
-    image: "/apna-edu.webp",
+    image: "/product-service.webp",
     bgColor: "bg-[#161616]",
     textColor: "text-white",
     pillBg: "bg-white/10 text-white border-white/10",
@@ -116,12 +112,12 @@ export default function Services() {
               </div>
 
               <div className="w-full lg:w-2/5 flex items-center justify-center">
-                <div className="relative w-full aspect-16/10 rounded-xs overflow-hidden bg-black/10 shadow-sm">
+                <div className="relative w-full aspect-video rounded-xs overflow-hidden bg-black/10 shadow-sm">
                   <Image
                     src={service.image}
                     alt={service.title}
                     fill
-                    className="object-cover rounded-xs"
+                    className="object-contain rounded-xs"
                     sizes="(max-width: 1024px) 100vw, 40vw"
                   />
                 </div>

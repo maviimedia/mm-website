@@ -73,7 +73,7 @@ export default async function Home() {
       <section id="media" className="media border-t border-white/10 pt-16 lg:pt-24">
         <div className="mavii_wrap">
           <div className="w-full text-center mb-12 lg:mb-16">
-            <h2 className="font-['ArizonaFlare'] text-4xl sm:text-6xl lg:text-7xl font-light text-white tracking-tight uppercase">
+            <h2 className="font-['ArizonaFlare'] pt-4 text-4xl sm:text-6xl lg:text-7xl font-light text-white tracking-tight uppercase">
               #ClientWorks
             </h2>
           </div>
