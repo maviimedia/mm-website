@@ -90,7 +90,7 @@ export default function TechPlatforms() {
   };
 
   return (
-    <section className="bg-black text-white py-20 lg:py-28 px-6 lg:px-10 border-t border-white/10">
+    <section className="bg-black text-white py-20 px-4 sm:px-6 lg:px-10 border-t border-white/10">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
@@ -99,7 +99,7 @@ export default function TechPlatforms() {
       <div className="mavii_wrap">
         <div className="flex flex-col md:flex-row md:items-baseline justify-between gap-4 pb-12 border-b border-white/10">
           <h2 className="font-['ArizonaFlare'] text-xl sm:text-2xl lg:text-3xl text-[#d4d4d4] hover:text-white transition-colors duration-150 cursor-default font-light">
-            [ ֎ Technology Platforms We Use ]
+            [ 03 / Technology Platforms We Use ]
           </h2>
         </div>
 
