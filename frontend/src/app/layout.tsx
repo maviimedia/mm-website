@@ -3,7 +3,7 @@ import "./globals.css";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import SmoothScroll from "../components/SmoothScroll";
-import GlobalDock from "../components/GlobalDock";
+import TopAnnouncement from "../components/TopAnnouncement";
 
 export const metadata: Metadata = {
   title: "Website & Software Development Agency — MAVIIMEDIA",
@@ -28,12 +28,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
+        <TopAnnouncement />
         <SmoothScroll>
           <Header />
           {children}
           <Footer />
         </SmoothScroll>
-        {/* <GlobalDock /> */}
       </body>
     </html>
   );

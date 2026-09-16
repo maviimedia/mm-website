@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import MediaGrid from "../components/MediaGrid";
 import TechPlatforms from "../components/TechPlatforms";
@@ -11,13 +13,45 @@ export default async function Home() {
 
   return (
     <>
+      <style>{`
+        @keyframes arrowSlideHorizontal {
+          0%, 100% {
+            transform: translateX(0);
+          }
+          50% {
+            transform: translateX(4px);
+          }
+        }
+        .animate-arrow-horizontal {
+          animation: arrowSlideHorizontal 1.2s ease-in-out infinite;
+        }
+      `}</style>
+
       <section className="py-20 px-6 lg:px-10 text-white">
         <div className="mavii_wrap flex flex-col lg:flex-row gap-12 lg:gap-24">
-          <div className="w-full lg:w-1/2">
+          <div className="w-full lg:w-1/2 flex flex-col items-start">
             <p className="font-['ArizonaFlare'] text-xl md:text-3xl lg:text-3xl leading-none font-light">
               Hello, we work as your true partner to build your brand, websites, and software with clear communication and on-time delivery.
             </p>
+
+            <div className="mt-8 md:mt-10">
+              <Link
+                href="https://calendly.com/maviimedia/15min"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group inline-flex items-center justify-center gap-2.5 rounded-full bg-[#0022FF] px-6 py-2.5 text-base font-medium tracking-wider text-white uppercase transition-all duration-200 hover:opacity-90 active:scale-95"
+              >
+                <span>Book Appointment</span>
+                <span className="inline-flex items-center justify-center">
+                  <ArrowRight
+                    size={16}
+                    className="animate-arrow-horizontal shrink-0 text-white"
+                  />
+                </span>
+              </Link>
+            </div>
           </div>
+
           <div className="w-full lg:w-1/2">
             <div className="grid grid-cols-2 gap-8">
               <div>

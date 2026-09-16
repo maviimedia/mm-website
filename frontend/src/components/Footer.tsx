@@ -8,9 +8,9 @@ export default function Footer() {
           <div className="footer-pp__info">
             <div className="footer-pp__block footer-pp__block--year">
               <div className="footer-pp__label">
-                <span>Year Founded</span>
+                <span>Project Completed</span>
               </div>
-              <div className="footer-pp__value footer-pp__year">2021</div>
+              <div className="footer-pp__value footer-pp__year">103*</div>
             </div>
             <div className="footer-pp__block footer-pp__block--location">
               <div className="footer-pp__label">
