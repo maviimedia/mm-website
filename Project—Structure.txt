@@ -20,13 +20,22 @@ mm-main/
         tsconfig.json
         public/
             about.svg
+            apna-edu-mobile.webp
+            apna-edu.webp
             contact.svg
+            ed-force-mobile.webp
+            ed-force.webp
             email.svg
             file.svg
             globe.svg
+            laptop-studio-mobile.webp
+            laptop-studio.webp
+            loading-bg.webp
             manifest.json
             next.svg
             phone.svg
+            soul-soil-mobile.webp
+            soul-soil.webp
             thunder.png
             thunder.svg
             vercel.svg
@@ -60,7 +69,6 @@ mm-main/
                 helveesti_700_normal_body_labels.woff2
         src/
             app/
-                favicon.ico
                 globals.css
                 layout.tsx
                 loading.tsx
@@ -90,8 +98,10 @@ mm-main/
                 InfiniteWorkList.tsx
                 MediaGrid.tsx
                 SmoothScroll.tsx
+                TechPlatforms.tsx
+                Testimonials.tsx
+                TopAnnouncement.tsx
                 WorkSkeleton.tsx
-                test.txt
                 ui/
                     button.tsx
             lib/

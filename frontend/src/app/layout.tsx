@@ -4,6 +4,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import SmoothScroll from "../components/SmoothScroll";
 import TopAnnouncement from "../components/TopAnnouncement";
+import MobileFloatingBar from "@/components/MobileFloatingBar";
 
 export const metadata: Metadata = {
   title: "Website & Software Development Agency — MAVIIMEDIA",
@@ -34,6 +35,7 @@ export default function RootLayout({
           {children}
           <Footer />
         </SmoothScroll>
+        <MobileFloatingBar />
       </body>
     </html>
   );
