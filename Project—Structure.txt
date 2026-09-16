@@ -22,23 +22,27 @@ mm-main/
             about.svg
             apna-edu-mobile.webp
             apna-edu.webp
+            branding-service.webp
             contact.svg
             ed-force-mobile.webp
             ed-force.webp
             email.svg
             file.svg
             globe.svg
+            identity-service.webp
             laptop-studio-mobile.webp
             laptop-studio.webp
             loading-bg.webp
             manifest.json
             next.svg
             phone.svg
+            product-service.webp
             soul-soil-mobile.webp
             soul-soil.webp
             thunder.png
             thunder.svg
             vercel.svg
+            website-service.webp
             window.svg
             work.svg
             works.svg
@@ -92,11 +96,14 @@ mm-main/
                     [slug]/
                         page.tsx
             components/
+                FloatingBar.tsx
                 Footer.tsx
                 GlobalDock.tsx
                 Header.tsx
                 InfiniteWorkList.tsx
                 MediaGrid.tsx
+                MobileFloatingBar.tsx
+                Services.tsx
                 SmoothScroll.tsx
                 TechPlatforms.tsx
                 Testimonials.tsx

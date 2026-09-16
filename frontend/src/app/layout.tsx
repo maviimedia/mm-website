@@ -6,6 +6,7 @@ import SmoothScroll from "../components/SmoothScroll";
 import TopAnnouncement from "../components/TopAnnouncement";
 import MobileFloatingBar from "@/components/MobileFloatingBar";
 import FloatingBar from "@/components/FloatingBar";
+import PopupForm from "@/components/PopupForm";
 
 export const metadata: Metadata = {
   title: "Website & Software Development Agency — MAVIIMEDIA",
@@ -36,7 +37,8 @@ export default function RootLayout({
           {children}
           <Footer />
         </SmoothScroll>
-        <FloatingBar/>
+        <FloatingBar />
+        <PopupForm />
       </body>
     </html>
   );
