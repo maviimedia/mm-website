@@ -51,17 +51,13 @@ export default function Contact() {
           <div className="contact__block">
             <h3 className="contact__label">PORTFOLIO</h3>
             <p className="contact__details">
-              <Link className="contact__link" href="#">
+              <Link className="contact__link" href="https://www.maviimedia.com/works">
                 Website & Software
               </Link>
               <br />
-              <Link className="contact__link" href="#">
+              <Link className="contact__link" href="https://www.maviimedia.com/works">
                 Video Editing
               </Link>
-              <br />
-              <a className="contact__link" href="mailto:hello@maviimedia.com">
-                hello@maviimedia.com
-              </a>
             </p>
           </div>
         </div>
@@ -92,8 +88,8 @@ export default function Contact() {
               >
                 <p>
                   For partnerships, send us your deck or brief at{" "}
-                  <a className="contact__link" href="mailto:collab@maviimedia.com">
-                    collab@maviimedia.com
+                  <a className="contact__link" href="mailto:contact@maviimedia.com">
+                    contact@maviimedia.com
                   </a>
                   . Our team usually responds within 3–5 business days. If it’s time-sensitive, please add <strong>[URGENT]</strong> in the subject line.
                 </p>
@@ -172,8 +168,8 @@ export default function Contact() {
               >
                 <p>
                   For business services, contact our sales team at{" "}
-                  <a className="contact__link" href="mailto:sales@maviimedia.com">
-                    sales@maviimedia.com
+                  <a className="contact__link" href="mailto:jyoti@maviimedia.com">
+                    jyoti@maviimedia.com
                   </a>
                   . A proposal and timeline will be shared according to your requirements.
                 </p>

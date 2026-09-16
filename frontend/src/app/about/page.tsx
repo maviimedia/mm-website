@@ -136,63 +136,6 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
-
-      <section className="contact" style={{ backgroundColor: "#000000", borderTop: "1px solid rgba(255,255,255,0.05)", paddingBlock: "100px" }}>
-        <div className="mavii_wrap">
-          <h2 className="contact__title" style={{ marginBottom: "20px" }}>
-            LET'S BUILD TOGETHER
-          </h2>
-          <p className="contact__subtitle" style={{ color: "#a7a9ac", maxWidth: "600px", fontSize: "15px", marginBottom: "60px" }}>
-            We genuinely care about your business like it's our own, and we work with you like a partner.
-            Your vision is in safe hands, and we'll bring it to life together.
-          </p>
-
-          <div className="contact__info">
-            <div className="contact__block">
-              <h3 className="contact__label">OFFICE</h3>
-              <p className="contact__details" style={{ color: "#a7a9ac" }}>
-                MAVIIMEDIA (MUMBAI OFFICE)
-                <br />
-                Goregaon (EAST), Mumbai
-                <br />
-                <a className="contact__link" href="mailto:contact@maviimedia.com">
-                  contact@maviimedia.com
-                </a>
-              </p>
-            </div>
-
-            <div className="contact__block">
-              <h3 className="contact__label">SUPPORT</h3>
-              <p className="contact__details" style={{ color: "#a7a9ac" }}>
-                <a className="contact__link" href="mailto:support@maviimedia.com">
-                  support@maviimedia.com
-                </a>
-                <br />
-                <a className="contact__link" href="tel:+919619431065">
-                  +91 9619431065
-                </a>
-              </p>
-            </div>
-
-            <div className="contact__block">
-              <h3 className="contact__label">PORTFOLIO</h3>
-              <p className="contact__details" style={{ color: "#a7a9ac" }}>
-                <Link className="contact__link" href="#">
-                  Website & Software
-                </Link>
-                <br />
-                <Link className="contact__link" href="#">
-                  Video Editing
-                </Link>
-                <br />
-                <a className="contact__link" href="mailto:hello@maviimedia.com">
-                  hello@maviimedia.com
-                </a>
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
     </main>
   );
 }

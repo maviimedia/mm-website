@@ -24,11 +24,11 @@ export default function Footer() {
         <div className="footer-pp__grid">
           <div className="footer-pp__col">
             <h4 className="footer-pp__heading">Get in touch</h4>
-            <a className="footer-pp__link" href="mailto:business@maviimedia.com">
-              business@maviimedia.com
+            <a className="footer-pp__link" href="mailto:contact@maviimedia.com">
+              contact@maviimedia.com
             </a>
-            <a className="footer-pp__link" href="mailto:hello@maviimedia.com">
-              hello@maviimedia.com
+            <a className="footer-pp__link" href="mailto:jyoti@maviimedia.com">
+              jyoti@maviimedia.com
             </a>
           </div>
           <div className="footer-pp__col">

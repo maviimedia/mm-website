@@ -21,7 +21,7 @@ const testimonials: Testimonial[] = [
     image: "/apna-edu.webp",
     mobileImage: "/apna-edu-mobile.webp",
     bg: "bg-[#FBF8F5]",
-    link: "https://apnaedu.com",
+    link: "https://www.maviimedia.com/works/apna-education",
   },
   {
     id: "02",
@@ -32,7 +32,7 @@ const testimonials: Testimonial[] = [
     image: "/laptop-studio.webp",
     mobileImage: "/laptop-studio-mobile.webp",
     bg: "bg-[#F0F3EF]",
-    link: "https://mylaptopstudio.com",
+    link: "https://www.maviimedia.com/works/laptop-studio",
   },
   {
     id: "03",
@@ -43,7 +43,7 @@ const testimonials: Testimonial[] = [
     image: "/ed-force.webp",
     mobileImage: "/ed-force-mobile.webp",
     bg: "bg-[#F5F1EC]",
-    link: "https://edforce.com",
+    link: "https://www.maviimedia.com/works/edforce",
   },
   {
     id: "04",
@@ -54,7 +54,7 @@ const testimonials: Testimonial[] = [
     image: "/soul-soil.webp",
     mobileImage: "/soul-soil-mobile.webp",
     bg: "bg-[#F5F1EC]",
-    link: "https://soulsoil.com",
+    link: "https://www.maviimedia.com/works/soul",
   },
 ];
 
