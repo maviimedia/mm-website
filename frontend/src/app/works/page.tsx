@@ -2,6 +2,12 @@ export const dynamic = "force-dynamic";
 
 import { fetchWorksPagination } from "../../lib/workActions";
 import InfiniteWorkList from "../../components/InfiniteWorkList";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Works",
+  description: "Selected projects and case studies by MAVIIMEDIA.",
+};
 
 export default async function WorksPage() {
   const { data: initialWorks, error } = await fetchWorksPagination(1, 8);

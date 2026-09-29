@@ -18,26 +18,56 @@ export default function PopupForm() {
   });
 
   useEffect(() => {
-    let hasTriggered = false;
+    let ticking = false;
 
     const handleScroll = () => {
-      if (hasTriggered) return;
-
-      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-      if (scrollHeight <= 0) return;
-
-      const currentScrollPercent = (window.scrollY / scrollHeight) * 100;
-
-      if (currentScrollPercent >= 15) {
-        hasTriggered = true;
-        setIsOpen(true);
-        window.removeEventListener("scroll", handleScroll);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+          if (scrollHeight > 0) {
+            const currentScrollPercent = (window.scrollY / scrollHeight) * 100;
+            if (currentScrollPercent >= 15) {
+              setIsOpen(true);
+              window.removeEventListener("scroll", handleScroll);
+            }
+          }
+          ticking = false;
+        });
+        ticking = true;
       }
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const preventScroll = (e: Event) => {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest(".modal-scrollable")) {
+        return;
+      }
+      e.preventDefault();
+    };
+
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    window.addEventListener("wheel", preventScroll, { passive: false });
+    window.addEventListener("touchmove", preventScroll, { passive: false });
+
+    return () => {
+      document.body.style.overflow = originalBodyOverflow;
+      document.documentElement.style.overflow = originalHtmlOverflow;
+      window.removeEventListener("wheel", preventScroll);
+      window.removeEventListener("touchmove", preventScroll);
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -62,12 +92,12 @@ export default function PopupForm() {
   };
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-      <div className="relative w-full max-w-[440px] rounded-2xl bg-[#EBEBEB] p-8 text-[#111111] shadow-2xl">
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/75 p-4 will-change-transform">
+      <div className="modal-scrollable relative w-full max-w-[440px] max-h-[90vh] overflow-y-auto rounded-2xl bg-[#EBEBEB] p-8 text-[#111111] shadow-2xl">
         <button
           type="button"
           onClick={() => setIsOpen(false)}
-          className="absolute right-5 top-5 text-neutral-500 hover:text-black transition-colors"
+          className="absolute right-5 top-5 text-neutral-500 hover:text-black transition-colors cursor-pointer"
           aria-label="Close modal"
         >
           <X size={20} />
@@ -149,7 +179,7 @@ export default function PopupForm() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="rounded-full border border-black px-8 py-2 text-xs font-base tracking-widest uppercase text-black hover:bg-black hover:text-white transition-all active:scale-95 disabled:opacity-50"
+                className="rounded-full border border-black px-8 py-2 text-xs font-base tracking-widest uppercase text-black hover:bg-black hover:text-white transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
               >
                 {submitting ? "Booking..." : "Book Now"}
               </button>

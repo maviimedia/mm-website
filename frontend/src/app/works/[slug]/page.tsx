@@ -1,7 +1,55 @@
+import type { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 
-export default async function WorkPage({ params }: { params: { slug: string } }) {
+type PageProps = {
+  params: Promise<{ slug: string }>;
+};
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const { data: workList } = await supabase
+    .from("works")
+    .select("title, brief, banner_url")
+    .eq("slug", slug);
+
+  const work = workList?.[0];
+
+  if (!work) {
+    return {
+      title: "Work Not Found",
+    };
+  }
+
+  return {
+    title: work.title,
+    description: work.brief || `${work.title} case study by MAVIIMEDIA`,
+    openGraph: {
+      title: work.title,
+      description: work.brief || `${work.title} case study by MAVIIMEDIA`,
+      images: work.banner_url
+        ? [
+            {
+              url: work.banner_url,
+              width: 1200,
+              height: 630,
+              alt: work.title,
+            },
+          ]
+        : [],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: work.title,
+      description: work.brief || `${work.title} case study by MAVIIMEDIA`,
+      images: work.banner_url ? [work.banner_url] : [],
+    },
+  };
+}
+
+export default async function WorkPage({ params }: PageProps) {
   const { slug } = await params;
   
   const { data: workList } = await supabase.from("works").select("*").eq("slug", slug);
@@ -19,7 +67,7 @@ export default async function WorkPage({ params }: { params: { slug: string } })
         <div className="mavii_wrap">
           <ol className="bc-list">
             <li className="bc-item">
-              <a href="/" className="bc-link">work</a>
+              <Link href="/" className="bc-link">work</Link>
             </li>
             <li className="bc-item">
               <span className="bc-current">{work.title.toLowerCase()}</span>
@@ -78,11 +126,15 @@ export default async function WorkPage({ params }: { params: { slug: string } })
         <section id="client-banner" className="cb-section">
           <div className="mavii_wrap">
             <div className="cb-banner">
-              <img 
+              <Image 
                 src={work.banner_url} 
                 alt={`${work.title} Banner`} 
+                width={1440}
+                height={800}
+                priority
+                sizes="(max-width: 1064px) 100vw, 1064px"
                 className="cb-image"
-                loading="lazy"
+                style={{ width: "100%", height: "auto" }}
               />
               <div className="cb-overlay"></div>
             </div>
@@ -101,10 +153,12 @@ export default async function WorkPage({ params }: { params: { slug: string } })
               {gallery.map((media: any) => (
                 <div key={media.id} className="wrk-item">
                   <div className="wrk-visual">
-                    <img 
+                    <Image 
                       src={media.image_url} 
                       alt={media.title ? media.title.replace(/\.[^/.]+$/, "") : "Project Media"} 
-                      loading="lazy" 
+                      fill
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      className="object-cover"
                     />
                     <div className="wrk-overlay">
                       <span className="wrk-title">
